@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "PmbApplication": {
+      "title": "PmbApplication",
+      "description": "PMB registration form entries submitted by candidates",
+      "type": "object",
+      "properties": {
+        "applicationId": { "type": "string", "description": "Candidate application identification ID" },
+        "name": { "type": "string", "description": "Applicant full name" },
+        "email": { "type": "string", "description": "Applicant contact email address" },
+        "phone": { "type": "string", "description": "Applicant active phone/WhatsApp number" },
+        "highSchool": { "type": "string", "description": "Origin of applicant's high school" },
+        "gradYear": { "type": "string", "description": "Year of graduation from high school" },
+        "major": { "type": "string", "description": "Selected department study program" },
+        "classType": { "type": "string", "description": "Selected class type (Reguler or Karyawan)" },
+        "status": { "type": "string", "enum": ["Pending", "Verified", "Lulus Seleksi", "Tidak Lulus"] },
+        "notes": { "type": "string", "description": "Optional administrative review comments" },
+        "createdAt": { "type": "string", "description": "ISO timestamp indicating when the registration form was filed" }
+      },
+      "required": ["applicationId", "name", "email", "phone", "highSchool", "gradYear", "major", "classType", "status", "createdAt"]
+    },
+    "ContactMessage": {
+      "title": "ContactMessage",
+      "description": "Contact message submitted via the contact form and tracked on the administrator inbox",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Sender full name" },
+        "email": { "type": "string", "description": "Sender email address" },
+        "message": { "type": "string", "description": "Body description of content/query" },
+        "isRead": { "type": "boolean", "description": "Status marker if administrative has reviewed the query" },
+        "replyNote": { "type": "string", "description": "Reviewer feedback reply comments note" },
+        "createdAt": { "type": "string", "description": "ISO timestamp when the message was saved" }
+      },
+      "required": ["name", "email", "message", "isRead", "createdAt"]
+    },
+    "AnnouncementItem": {
+      "title": "AnnouncementItem",
+      "description": "Dynamic announcement/news feed items and academic highlights published on the website home screen",
+      "type": "object",
+      "properties": {
+        "category": { "type": "string", "description": "Article category header (e.g. Prestasi Mahasiswa)" },
+        "date": { "type": "string", "description": "Published date displayed on the card" },
+        "title": { "type": "string", "description": "Headline title text" },
+        "desc": { "type": "string", "description": "Introductory or complete summary review of the news content" },
+        "image": { "type": "string", "description": "Unsplash or asset banner visual image URL link" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of when the announcement item was produced" }
+      },
+      "required": ["category", "date", "title", "desc", "image", "createdAt"]
+    },
+    "WebsiteSettings": {
+      "title": "WebsiteSettings",
+      "description": "Durable corporate and institutional contact variables rendered across pages and footers",
+      "type": "object",
+      "properties": {
+        "directorName": { "type": "string", "description": "Official currently leading APJ" },
+        "directorTitle": { "type": "string", "description": "Official's role designation title" },
+        "establishedYear": { "type": "string", "description": "Year of institution establishment" },
+        "foundationName": { "type": "string", "description": "Entity managing the college" },
+        "address": { "type": "string", "description": "Physical location address of APJ" },
+        "phoneLines": { "type": "string", "description": "Standard contact telephone lists" },
+        "pmbEmail": { "type": "string", "description": "Official pmb correspondence inbox address" },
+        "consultationHours": { "type": "string", "description": "Expected helpdesk hours" }
+      },
+      "required": ["directorName", "directorTitle", "establishedYear", "foundationName", "address", "phoneLines", "pmbEmail", "consultationHours"]
+    },
+    "BoardMember": {
+      "title": "BoardMember",
+      "description": "Board members of APJ and Yayasan shown on the website profiling page",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name with titles" },
+        "role": { "type": "string", "description": "Designative title role" },
+        "education": { "type": "string", "description": "Academic credentials background" },
+        "avatar": { "type": "string", "description": "Emoji, URL, or Base64 image photo metadata" },
+        "category": { "type": "string", "enum": ["APJ", "Yayasan"] },
+        "order": { "type": "number", "description": "Explicit integer sort order" }
+      },
+      "required": ["name", "role", "education", "avatar", "category", "order"]
+    }
+  },
+  "firestore": {
+    "/pmb_applications/{applicationId}": {
+      "schema": "PmbApplication",
+      "description": "List of registration applications filed by online users on website"
+    },
+    "/contact_messages/{messageId}": {
+      "schema": "ContactMessage",
+      "description": "Inbox submissions sent through the contact helpdesk"
+    },
+    "/announcements/{announcementId}": {
+      "schema": "AnnouncementItem",
+      "description": "Dynamic announcement feed and milestones"
+    },
+    "/website_settings/{settingId}": {
+      "schema": "WebsiteSettings",
+      "description": "Global institutional settings variables"
+    },
+    "/board_members/{memberId}": {
+      "schema": "BoardMember",
+      "description": "Academic board of management and foundation directories"
+    }
+  }
+}

@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == "admin@apj.ac.id" ||
+        request.auth.token.email == "kusmayady@gmail.com" ||
+        request.auth.uid == "bypass-test-admin"
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidPmbApplication(data) {
+      return data.applicationId is string && data.applicationId.size() <= 64
+          && data.name is string && data.name.size() <= 200
+          && data.email is string && data.email.size() <= 200
+          && data.phone is string && data.phone.size() <= 100
+          && data.highSchool is string && data.highSchool.size() <= 200
+          && data.gradYear is string && data.gradYear.size() <= 10
+          && data.major is string && data.major.size() <= 100
+          && data.classType is string && data.classType.size() <= 50
+          && data.status is string && data.status in ['Pending', 'Verified', 'Lulus Seleksi', 'Tidak Lulus']
+          && data.createdAt is string;
+    }
+
+    function isValidContactMessage(data) {
+      return data.name is string && data.name.size() <= 200
+          && data.email is string && data.email.size() <= 200
+          && data.message is string && data.message.size() <= 2000
+          && data.isRead is bool
+          && data.createdAt is string;
+    }
+
+    function isValidAnnouncementItem(data) {
+      return data.category is string && data.category.size() <= 100
+          && data.date is string && data.date.size() <= 50
+          && data.title is string && data.title.size() <= 300
+          && data.desc is string && data.desc.size() <= 3000
+          && data.image is string && data.image.size() <= 2097152
+          && data.createdAt is string;
+    }
+
+    function isValidWebsiteSettings(data) {
+      return data.directorName is string && data.directorName.size() <= 200
+          && data.directorTitle is string && data.directorTitle.size() <= 200
+          && data.establishedYear is string && data.establishedYear.size() <= 10
+          && data.foundationName is string && data.foundationName.size() <= 200
+          && data.address is string && data.address.size() <= 500
+          && data.phoneLines is string && data.phoneLines.size() <= 200
+          && data.pmbEmail is string && data.pmbEmail.size() <= 200
+          && data.consultationHours is string && data.consultationHours.size() <= 300;
+    }
+
+    function isValidBoardMember(data) {
+      return data.name is string && data.name.size() <= 200
+          && data.role is string && data.role.size() <= 200
+          && data.education is string && data.education.size() <= 200
+          && data.avatar is string && data.avatar.size() <= 1048576
+          && data.category is string && data.category in ['APJ', 'Yayasan']
+          && data.order is number;
+    }
+
+    // Website Settings
+    match /website_settings/{settingId} {
+      allow read, get: if true;
+      allow write, create, update: if isAdmin() || resource == null;
+    }
+
+    // Announcements
+    match /announcements/{announcementId} {
+      allow read, get, list: if true;
+      allow write, create, update, delete: if isAdmin() || resource == null;
+    }
+
+    // PMB Applications
+    match /pmb_applications/{applicationId} {
+      allow create: if isValidPmbApplication(request.resource.data);
+      allow read, get, list, update, delete: if isAdmin();
+    }
+
+    // Contact Messages
+    match /contact_messages/{messageId} {
+      allow create: if isValidContactMessage(request.resource.data);
+      allow read, get, list, update, delete: if isAdmin();
+    }
+
+    // Board Members
+    match /board_members/{memberId} {
+      allow read, write: if true;
+    }
+  }
+}

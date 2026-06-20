@@ -1,0 +1,6 @@
+{
+  "name": "Akademi Pariwisata Jakarta",
+  "description": "Situs Resmi Akademik Akademi Pariwisata Jakarta (APJ). Menyediakan Informasi Program Studi D3 Perhotelan & D3 Usaha Perjalanan Wisata, PMB, rincian biaya kuliah, fasilitas kampus, dan Layanan Konselor Virtual.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
