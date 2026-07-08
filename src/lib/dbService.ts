@@ -70,6 +70,7 @@ const COL_SETTINGS = "website_settings";
 const COL_BOARD = "board_members";
 export const COL_MENU_ITEMS = "joomla_menu_items";
 export const COL_TEMPLATE_STYLES = "joomla_template_styles";
+export const COL_SLIDES = "joomla_slides";
 
 // --- Deleted IDs Tracking for robust client persistence ---
 function getLocalDeletedIds(collectionName: string): string[] {
@@ -145,6 +146,64 @@ export interface DbTemplateStyle {
   showHeroBackground: boolean;
   badgeStyle: "pill" | "sharp" | "outline";
   isSystem?: boolean;
+
+  // New APJ branding & typography fields
+  logoHeader?: string;
+  logoFooter?: string;
+  favicon?: string;
+
+  titleFontFamily?: string;
+  titleFontColor?: string;
+  titleFontSize?: string;
+
+  subtitleFontFamily?: string;
+  subtitleFontColor?: string;
+  subtitleFontSize?: string;
+
+  h1FontFamily?: string;
+  h1FontColor?: string;
+  h1FontSize?: string;
+
+  h2FontFamily?: string;
+  h2FontColor?: string;
+  h2FontSize?: string;
+
+  h3FontFamily?: string;
+  h3FontColor?: string;
+  h3FontSize?: string;
+
+  h4FontFamily?: string;
+  h4FontColor?: string;
+  h4FontSize?: string;
+
+  h5FontFamily?: string;
+  h5FontColor?: string;
+  h5FontSize?: string;
+
+  h6FontFamily?: string;
+  h6FontColor?: string;
+  h6FontSize?: string;
+
+  textFontFamily?: string;
+  textFontColor?: string;
+  textFontSize?: string;
+
+  paragraphFontFamily?: string;
+  paragraphFontColor?: string;
+  paragraphFontSize?: string;
+  menuFontFamily?: string;
+
+  titleFontWeight?: string;
+  subtitleFontWeight?: string;
+  h1FontWeight?: string;
+  h2FontWeight?: string;
+  h3FontWeight?: string;
+  h4FontWeight?: string;
+  h5FontWeight?: string;
+  h6FontWeight?: string;
+  textFontWeight?: string;
+  paragraphFontWeight?: string;
+  menuFontWeight?: string;
 }
 
 export interface DbMenuItem {
@@ -384,7 +443,40 @@ export const DEFAULT_TEMPLATE_STYLES: DbTemplateStyle[] = [
     headerStyle: "sticky",
     showHeroBackground: true,
     badgeStyle: "pill",
-    isSystem: true
+    isSystem: true,
+    logoHeader: "/input_file_0.png",
+    logoFooter: "/input_file_1.png",
+    favicon: "/input_file_1.png",
+    titleFontFamily: "Montserrat",
+    titleFontColor: "#002f5a",
+    titleFontSize: "2.5rem",
+    subtitleFontFamily: "Plus Jakarta Sans",
+    subtitleFontColor: "#475569",
+    subtitleFontSize: "1.25rem",
+    h1FontFamily: "Poppins",
+    h1FontColor: "#002f5a",
+    h1FontSize: "2.25rem",
+    h2FontFamily: "Poppins",
+    h2FontColor: "#002f5a",
+    h2FontSize: "1.875rem",
+    h3FontFamily: "Poppins",
+    h3FontColor: "#002f5a",
+    h3FontSize: "1.5rem",
+    h4FontFamily: "Poppins",
+    h4FontColor: "#002f5a",
+    h4FontSize: "1.25rem",
+    h5FontFamily: "Poppins",
+    h5FontColor: "#1e3a8a",
+    h5FontSize: "1.125rem",
+    h6FontFamily: "Poppins",
+    h6FontColor: "#1e3a8a",
+    h6FontSize: "1rem",
+    textFontFamily: "Plus Jakarta Sans",
+    textFontColor: "#1e293b",
+    textFontSize: "0.875rem",
+    paragraphFontFamily: "Plus Jakarta Sans",
+    paragraphFontColor: "#334155",
+    paragraphFontSize: "0.875rem"
   },
   {
     id: "tpl-sand",
@@ -399,7 +491,40 @@ export const DEFAULT_TEMPLATE_STYLES: DbTemplateStyle[] = [
     headerStyle: "glass",
     showHeroBackground: true,
     badgeStyle: "pill",
-    isSystem: true
+    isSystem: true,
+    logoHeader: "/input_file_0.png",
+    logoFooter: "/input_file_1.png",
+    favicon: "/input_file_1.png",
+    titleFontFamily: "Playfair Display",
+    titleFontColor: "#7c2d12",
+    titleFontSize: "2.75rem",
+    subtitleFontFamily: "Merriweather",
+    subtitleFontColor: "#7c2d12",
+    subtitleFontSize: "1.125rem",
+    h1FontFamily: "Playfair Display",
+    h1FontColor: "#7c2d12",
+    h1FontSize: "2.5rem",
+    h2FontFamily: "Playfair Display",
+    h2FontColor: "#7c2d12",
+    h2FontSize: "2rem",
+    h3FontFamily: "Playfair Display",
+    h3FontColor: "#ea580c",
+    h3FontSize: "1.5rem",
+    h4FontFamily: "Merriweather",
+    h4FontColor: "#7c2d12",
+    h4FontSize: "1.25rem",
+    h5FontFamily: "Merriweather",
+    h5FontColor: "#7c2d12",
+    h5FontSize: "1.125rem",
+    h6FontFamily: "Merriweather",
+    h6FontColor: "#7c2d12",
+    h6FontSize: "1rem",
+    textFontFamily: "Plus Jakarta Sans",
+    textFontColor: "#27272a",
+    textFontSize: "0.875rem",
+    paragraphFontFamily: "Plus Jakarta Sans",
+    paragraphFontColor: "#3f3f46",
+    paragraphFontSize: "0.875rem"
   },
   {
     id: "tpl-midnight",
@@ -414,7 +539,40 @@ export const DEFAULT_TEMPLATE_STYLES: DbTemplateStyle[] = [
     headerStyle: "minimal",
     showHeroBackground: false,
     badgeStyle: "sharp",
-    isSystem: true
+    isSystem: true,
+    logoHeader: "/input_file_0.png",
+    logoFooter: "/input_file_1.png",
+    favicon: "/input_file_1.png",
+    titleFontFamily: "Space Grotesk",
+    titleFontColor: "#0f172a",
+    titleFontSize: "2.25rem",
+    subtitleFontFamily: "JetBrains Mono",
+    subtitleFontColor: "#475569",
+    subtitleFontSize: "1rem",
+    h1FontFamily: "Space Grotesk",
+    h1FontColor: "#0f172a",
+    h1FontSize: "2rem",
+    h2FontFamily: "Space Grotesk",
+    h2FontColor: "#0f172a",
+    h2FontSize: "1.75rem",
+    h3FontFamily: "Space Grotesk",
+    h3FontColor: "#475569",
+    h3FontSize: "1.5rem",
+    h4FontFamily: "JetBrains Mono",
+    h4FontColor: "#0f172a",
+    h4FontSize: "1.125rem",
+    h5FontFamily: "JetBrains Mono",
+    h5FontColor: "#0f172a",
+    h5FontSize: "1rem",
+    h6FontFamily: "JetBrains Mono",
+    h6FontColor: "#475569",
+    h6FontSize: "0.875rem",
+    textFontFamily: "JetBrains Mono",
+    textFontColor: "#0f172a",
+    textFontSize: "0.875rem",
+    paragraphFontFamily: "JetBrains Mono",
+    paragraphFontColor: "#334155",
+    paragraphFontSize: "0.825rem"
   },
   {
     id: "tpl-forest",
@@ -424,12 +582,45 @@ export const DEFAULT_TEMPLATE_STYLES: DbTemplateStyle[] = [
     accentColor: "#facc15",
     backgroundColor: "#f0fdf4",
     fontFamily: "font-sans",
-    headingFontName: "Outfit",
+    headingFontName: "Inter",
     cardRadius: "rounded-xl",
     headerStyle: "sticky",
     showHeroBackground: true,
     badgeStyle: "pill",
-    isSystem: true
+    isSystem: true,
+    logoHeader: "/input_file_0.png",
+    logoFooter: "/input_file_1.png",
+    favicon: "/input_file_1.png",
+    titleFontFamily: "Inter",
+    titleFontColor: "#064e3b",
+    titleFontSize: "2.5rem",
+    subtitleFontFamily: "Plus Jakarta Sans",
+    subtitleFontColor: "#047857",
+    subtitleFontSize: "1.25rem",
+    h1FontFamily: "Inter",
+    h1FontColor: "#064e3b",
+    h1FontSize: "2.25rem",
+    h2FontFamily: "Inter",
+    h2FontColor: "#064e3b",
+    h2FontSize: "1.875rem",
+    h3FontFamily: "Inter",
+    h3FontColor: "#047857",
+    h3FontSize: "1.5rem",
+    h4FontFamily: "Plus Jakarta Sans",
+    h4FontColor: "#064e3b",
+    h4FontSize: "1.25rem",
+    h5FontFamily: "Plus Jakarta Sans",
+    h5FontColor: "#064e3b",
+    h5FontSize: "1.125rem",
+    h6FontFamily: "Plus Jakarta Sans",
+    h6FontColor: "#047857",
+    h6FontSize: "1rem",
+    textFontFamily: "Plus Jakarta Sans",
+    textFontColor: "#0f172a",
+    textFontSize: "0.875rem",
+    paragraphFontFamily: "Plus Jakarta Sans",
+    paragraphFontColor: "#334155",
+    paragraphFontSize: "0.875rem"
   },
   {
     id: "tpl-wine",
@@ -444,7 +635,40 @@ export const DEFAULT_TEMPLATE_STYLES: DbTemplateStyle[] = [
     headerStyle: "glass",
     showHeroBackground: true,
     badgeStyle: "outline",
-    isSystem: true
+    isSystem: true,
+    logoHeader: "/input_file_0.png",
+    logoFooter: "/input_file_1.png",
+    favicon: "/input_file_1.png",
+    titleFontFamily: "Playfair Display",
+    titleFontColor: "#4c0519",
+    titleFontSize: "2.75rem",
+    subtitleFontFamily: "Merriweather",
+    subtitleFontColor: "#9d174d",
+    subtitleFontSize: "1.125rem",
+    h1FontFamily: "Playfair Display",
+    h1FontColor: "#4c0519",
+    h1FontSize: "2.5rem",
+    h2FontFamily: "Playfair Display",
+    h2FontColor: "#4c0519",
+    h2FontSize: "2rem",
+    h3FontFamily: "Playfair Display",
+    h3FontColor: "#9d174d",
+    h3FontSize: "1.5rem",
+    h4FontFamily: "Merriweather",
+    h4FontColor: "#4c0519",
+    h4FontSize: "1.25rem",
+    h5FontFamily: "Merriweather",
+    h5FontColor: "#4c0519",
+    h5FontSize: "1.125rem",
+    h6FontFamily: "Merriweather",
+    h6FontColor: "#9d174d",
+    h6FontSize: "1rem",
+    textFontFamily: "Plus Jakarta Sans",
+    textFontColor: "#1e293b",
+    textFontSize: "0.875rem",
+    paragraphFontFamily: "Plus Jakarta Sans",
+    paragraphFontColor: "#334155",
+    paragraphFontSize: "0.875rem"
   }
 ];
 
@@ -1367,5 +1591,160 @@ export async function deleteDbMenuItem(id: string): Promise<void> {
     }
   } catch (error) {
     console.warn("deleteDbMenuItem fail:", error);
+  }
+}
+
+export interface JoomlaSlide {
+  id?: string;
+  title: string;
+  subtitle: string;
+  desc: string;
+  ctaText: string;
+  imageUrl?: string;
+  order: number;
+  published: boolean;
+}
+
+const DEFAULT_SLIDES: JoomlaSlide[] = [
+  {
+    id: "slide-1",
+    title: "Penerimaan Mahasiswa Baru TA 2026/2027",
+    subtitle: "Saatnya Menjadi Profesional & Pemimpin Industri Pariwisata Dunia",
+    desc: "APJ membuka pendaftaran Jalur Reguler, Prestasi Rapor, Beasiswa Unggulan, dan Kelas Praktisi Karyawan. Pendaftaran gelombang kedua sedang berlangsung!",
+    ctaText: "Daftar PMB Sekarang",
+    imageUrl: "",
+    order: 1,
+    published: true
+  },
+  {
+    id: "slide-2",
+    title: "Program Studi D3 Perhotelan & Usaha Wisata",
+    subtitle: "Kurikulum Praktis Internasional Berlisensi BNSP",
+    desc: "Menyediakan pendidikan vokasional terbaik berbasis kompetensi kerja nyata. Siap kerja, siap bersaing di hotel bintang 5 nasional dan mancanegara.",
+    ctaText: "Eksplor Program Studi",
+    imageUrl: "",
+    order: 2,
+    published: true
+  },
+  {
+    id: "slide-3",
+    title: "Peluang Karir & Jaringan Global",
+    subtitle: "Magang Kerja Terarah Selama 6 Bulan",
+    desc: "Disalurkan langsung ke The Ritz-Carlton, JW Marriott, Grand Hyatt, kapal pesiar internasional, serta agen perjalanan pariwisata terkemuka.",
+    ctaText: "Hubungan Kerjasama Karir",
+    imageUrl: "",
+    order: 3,
+    published: true
+  }
+];
+
+function getLocalSlides(): JoomlaSlide[] {
+  try {
+    const data = localStorage.getItem("local_slides");
+    if (!data) {
+      localStorage.setItem("local_slides", JSON.stringify(DEFAULT_SLIDES));
+      return DEFAULT_SLIDES;
+    }
+    return JSON.parse(data);
+  } catch (e) {
+    return DEFAULT_SLIDES;
+  }
+}
+
+function saveLocalSlides(slides: JoomlaSlide[]) {
+  try {
+    localStorage.setItem("local_slides", JSON.stringify(slides));
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+export async function getJoomlaSlides(): Promise<JoomlaSlide[]> {
+  const deletedIds = getLocalDeletedIds(COL_SLIDES);
+  try {
+    const q = query(collection(db, COL_SLIDES));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      const local = getLocalSlides();
+      return local.filter(s => !deletedIds.includes(s.id!));
+    }
+    const firestoreList: JoomlaSlide[] = [];
+    snap.forEach(doc => {
+      firestoreList.push({ id: doc.id, ...doc.data() } as JoomlaSlide);
+    });
+    const local = getLocalSlides();
+    const merged = [...firestoreList];
+    local.forEach(loc => {
+      if (!merged.find(m => m.id === loc.id) && !deletedIds.includes(loc.id!)) {
+        merged.push(loc);
+      }
+    });
+    const finalFiltered = merged.filter(s => !deletedIds.includes(s.id!));
+    saveLocalSlides(finalFiltered);
+    return finalFiltered.sort((a, b) => a.order - b.order);
+  } catch (e) {
+    return getLocalSlides().filter(s => !deletedIds.includes(s.id!)).sort((a, b) => a.order - b.order);
+  }
+}
+
+export async function createJoomlaSlide(slide: Omit<JoomlaSlide, "id">): Promise<string> {
+  const tempId = "local-slide-" + Date.now();
+  try {
+    const local = getLocalSlides();
+    const newSlide = { id: tempId, ...slide };
+    local.push(newSlide);
+    local.sort((a, b) => a.order - b.order);
+    saveLocalSlides(local);
+  } catch (e) {
+    console.warn(e);
+  }
+
+  try {
+    const docRef = await addDoc(collection(db, COL_SLIDES), slide);
+    return docRef.id;
+  } catch (error) {
+    console.warn("createJoomlaSlide fail:", error);
+    return tempId;
+  }
+}
+
+export async function updateJoomlaSlide(id: string, updates: Partial<JoomlaSlide>): Promise<void> {
+  try {
+    const local = getLocalSlides();
+    const updated = local.map(s => s.id === id ? { ...s, ...updates } : s);
+    updated.sort((a, b) => a.order - b.order);
+    saveLocalSlides(updated);
+  } catch (e) {
+    console.warn(e);
+  }
+
+  try {
+    if (!id.startsWith("local") && !id.startsWith("slide-")) {
+      const docRef = doc(db, COL_SLIDES, id);
+      await updateDoc(docRef, updates);
+    }
+  } catch (error) {
+    console.warn("updateJoomlaSlide fail:", error);
+  }
+}
+
+export async function deleteJoomlaSlide(id: string): Promise<void> {
+  if (!id) return;
+  addLocalDeletedId(COL_SLIDES, id);
+  try {
+    const local = getLocalSlides();
+    const filtered = local.filter(s => s.id !== id);
+    saveLocalSlides(filtered);
+  } catch (e) {
+    console.warn(e);
+  }
+
+  try {
+    if (!id.startsWith("local") && !id.startsWith("slide-")) {
+      const docRef = doc(db, COL_SLIDES, id);
+      await deleteDoc(docRef);
+    }
+  } catch (error) {
+    console.warn("deleteJoomlaSlide fail:", error);
   }
 }

@@ -177,6 +177,56 @@ app.post("/api/generate-article", async (req, res) => {
   }
 });
 
+// 3. Endpoint for EduFin AI Financial Advisor
+app.post("/api/edufin-advisor", async (req, res) => {
+  try {
+    const { totalIncome, totalExpenses, cashFlow, pendingFees, expensesBreakdown } = req.body;
+
+    if (!apiKey) {
+      return res.status(500).json({ 
+        error: "Kunci API Gemini belum dikonfigurasi. Silakan tambahkan GEMINI_API_KEY di Settings > Secrets." 
+      });
+    }
+
+    const systemInstruction = 
+      "Anda adalah Dr. EduFin, Konsultan Analisis Keuangan Akademik Senior khusus perguruan tinggi pariwisata. " +
+      "Tugas Anda adalah meninjau laporan arus kas, anggaran operasional, lab kuliner/gastronomi, dan status tunggakan SPP " +
+      "dari Akademi Pariwisata Jakarta (APJ) untuk memberikan evaluasi keuangan yang komprehensif, logis, taktis, dan sehat.\n\n" +
+      "Aturan Pelaporan:\n" +
+      "1. Tulis seluruh laporan dalam Bahasa Indonesia yang formal, profesional, mendalam, dan memotivasi.\n" +
+      "2. Buat pembagian segmen laporan yang jelas menggunakan heading tebal:\n" +
+      "   - **I. EVALUASI KESEHATAN ARUS KAS**: Analisis rasio pemasukan dibanding pengeluaran kampus.\n" +
+      "   - **II. ANALISIS ANGGARAN OPERASIONAL & PRAKTIK**: Soroti alokasi dana untuk praktikum kuliner/perhotelan dan sarankan efisiensi.\n" +
+      "   - **III. STRATEGI REDUKSI TUNGGAKAN SPP/UKT**: Berikan ide kebijakan akademis yang persuasif namun efektif untuk mengurangi tunggakan mahasiswa.\n" +
+      "   - **IV. REKOMENDASI TAKTIS & ALOKASI SURPLUS**: Langkah nyata berikutnya bagi manajemen Yayasan Pendidikan Jayakarta.\n" +
+      "3. Berikan saran-saran spesifik yang relevan dengan industri hospitality (contoh: biaya bahan baku masakan, pemeliharaan lab kamar hotel simulator, atau kerjasama magang berbayar).\n" +
+      "4. Hindari kalimat cliché kecerdasan buatan. Berbicaralah dengan nada analis keuangan manusia yang tajam.";
+
+    const prompt = 
+      `Lakukan audit keuangan taktis berdasarkan ringkasan data finansial Akademi Pariwisata Jakarta berikut:\n` +
+      `- Total Pemasukan Operasional: Rp ${totalIncome?.toLocaleString("id-ID") || "0"}\n` +
+      `- Total Pengeluaran Operasional: Rp ${totalExpenses?.toLocaleString("id-ID") || "0"}\n` +
+      `- Sisa Saldo Arus Kas (Net Cash Flow): Rp ${cashFlow?.toLocaleString("id-ID") || "0"}\n` +
+      `- Total Piutang / Tunggakan SPP Mahasiswa: Rp ${pendingFees?.toLocaleString("id-ID") || "0"}\n` +
+      `- Rincian Kategori Pengeluaran saat ini: ${JSON.stringify(expensesBreakdown || [])}\n\n` +
+      `Berikan analisis mendalam dan solusi keuangan terbaik bagi kampus kami agar kegiatan akademik tetap berstandar bintang 5 namun tetap menguntungkan secara bisnis.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction: systemInstruction,
+        temperature: 0.65,
+      }
+    });
+
+    res.json({ analysis: response.text });
+  } catch (error: any) {
+    console.error("Kesalahan API EduFin Advisor:", error);
+    res.status(500).json({ error: error.message || "Gagal melakukan konsultasi keuangan AI." });
+  }
+});
+
 // Vite Middleware integration for Full-Stack structure
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

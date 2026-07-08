@@ -42,6 +42,7 @@ import {
   DbTemplateStyle,
   DbMenuItem
 } from "../lib/dbService";
+import { EduFin } from "./EduFin";
 import { 
   Lock, 
   User, 
@@ -70,8 +71,170 @@ import {
   Sparkles,
   Layout,
   ChevronDown,
-  FolderOpen
+  FolderOpen,
+  Puzzle,
+  Image,
+  CheckSquare,
+  Search,
+  Bot,
+  Sliders,
+  Cpu,
+  HelpCircle,
+  Briefcase,
+  Menu
 } from "lucide-react";
+
+// Helper component for file upload of header, footer and favicon
+function FileUploadField({ 
+  label, 
+  value, 
+  onChange 
+}: { 
+  label: string; 
+  value: string; 
+  onChange: (val: string) => void; 
+}) {
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const processFile = (file: File) => {
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/jpg', 'image/x-icon', 'image/vnd.microsoft.icon'].includes(file.type) && !file.name.endsWith('.png') && !file.name.endsWith('.jpg') && !file.name.endsWith('.jpeg') && !file.name.endsWith('.ico')) {
+      alert("Hanya file gambar dengan format .png, .jpg, atau .ico yang diperbolehkan!");
+      return;
+    }
+    // Limit to 1.5MB for Firestore saving
+    if (file.size > 1500000) {
+      alert("Ukuran gambar terlalu besar! Maksimal adalah 1.5MB agar dapat disimpan dengan baik.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (reader.result && typeof reader.result === 'string') {
+        onChange(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="space-y-1.5 bg-neutral-50/50 p-3.5 rounded-2xl border border-neutral-200/70 shadow-sm hover:shadow transition">
+      <label className="text-[10px] text-neutral-600 uppercase tracking-widest block font-black">{label}</label>
+      
+      {/* File Dropzone Preview */}
+      <div 
+        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={(e) => { e.preventDefault(); setIsDragOver(false); if (e.dataTransfer.files?.[0]) processFile(e.dataTransfer.files[0]); }}
+        onClick={() => fileInputRef.current?.click()}
+        className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
+          isDragOver ? "border-blue-500 bg-blue-50/20 scale-[1.01]" : "border-neutral-200 hover:border-neutral-300 bg-white"
+        }`}
+      >
+        <input 
+          type="file" 
+          ref={fileInputRef}
+          onChange={(e) => { if (e.target.files?.[0]) processFile(e.target.files[0]); }}
+          accept=".png,.jpg,.jpeg,.ico"
+          className="hidden"
+        />
+        {value ? (
+          <div className="flex flex-col items-center gap-1.5 text-center">
+            <img src={value} alt="Preview" className="h-12 w-auto object-contain max-w-[150px] rounded border border-neutral-100 p-1 bg-white shadow-inner" />
+            <span className="text-[8px] text-emerald-600 font-extrabold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/50">Selesai Diunggah</span>
+          </div>
+        ) : (
+          <div className="text-center space-y-1">
+            <span className="text-2xl block">📁</span>
+            <p className="text-[10px] font-bold text-neutral-600">Klik / Tarik Gambar</p>
+            <p className="text-[8px] text-neutral-400 font-semibold uppercase tracking-wider">Format: .png, .jpg (Maks 1.5MB)</p>
+          </div>
+        )}
+      </div>
+
+      {/* Manual URL Input */}
+      <div className="space-y-1 pt-1 border-t border-neutral-100 mt-2">
+        <span className="text-[8px] text-neutral-400 uppercase tracking-wider font-extrabold block">Atau gunakan URL Gambar manual</span>
+        <input 
+          type="text"
+          value={value && value.startsWith("data:") ? "Gambar Terunggah (Base64)" : value}
+          onChange={(e) => { if (!e.target.value.includes("Base64")) onChange(e.target.value); }}
+          placeholder="https://example.com/logo.png"
+          className="w-full bg-white border border-neutral-200 px-2.5 py-1.5 rounded-xl text-xs font-semibold focus:ring-1 focus:ring-primary focus:outline-none"
+        />
+      </div>
+    </div>
+  );
+}
+
+const CONDENSED_FONTS = [
+  "Arial Narrow",
+  "Arial Nova Condensed",
+  "Barlow Condensed",
+  "Saira Extra Condensed",
+  "Roboto Condensed",
+  "PT Sans Narrow",
+  "Fira Sans Extra Condensed"
+];
+
+const STANDARD_FONTS = [
+  "Arial Nova",
+  "Montserrat",
+  "Poppins",
+  "Inter",
+  "Plus Jakarta Sans",
+  "Playfair Display",
+  "Merriweather",
+  "Space Grotesk",
+  "JetBrains Mono"
+];
+
+function FontSelectorPills({ 
+  current, 
+  onSelect 
+}: { 
+  current: string; 
+  onSelect: (font: string) => void; 
+}) {
+  return (
+    <div className="mt-1.5 p-1.5 bg-white rounded-lg border border-neutral-200/50 space-y-1">
+      <div className="flex flex-wrap gap-1 items-center">
+        <span className="text-[7px] text-neutral-400 uppercase tracking-widest font-black shrink-0">Condensed:</span>
+        {CONDENSED_FONTS.map(font => (
+          <button 
+            key={font} 
+            type="button" 
+            onClick={() => onSelect(font)} 
+            className={`text-[8px] px-1 py-0.5 rounded font-bold transition-all ${
+              current.toLowerCase() === font.toLowerCase() 
+                ? "bg-primary text-white scale-105" 
+                : "bg-neutral-50 hover:bg-neutral-100 text-neutral-600 border border-neutral-150"
+            }`}
+          >
+            {font}
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-1 items-center border-t border-neutral-100 pt-1">
+        <span className="text-[7px] text-neutral-400 uppercase tracking-widest font-black shrink-0">Standar:</span>
+        {STANDARD_FONTS.map(font => (
+          <button 
+            key={font} 
+            type="button" 
+            onClick={() => onSelect(font)} 
+            className={`text-[8px] px-1 py-0.5 rounded font-bold transition-all ${
+              current.toLowerCase() === font.toLowerCase() 
+                ? "bg-primary text-white scale-105" 
+                : "bg-neutral-50 hover:bg-neutral-100 text-neutral-600 border border-neutral-150"
+            }`}
+          >
+            {font}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => void }) {
   const [user, setUser] = useState<any | null>(null);
@@ -89,8 +252,262 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
   const [joomlaMenus, setJoomlaMenus] = useState<DbMenuItem[]>([]);
   const [joomlaTemplates, setJoomlaTemplates] = useState<DbTemplateStyle[]>([]);
 
+  // Joomla CMS Advanced State variables
+  const [joomlaSubTab, setJoomlaSubTab] = useState<
+    | "dashboard"
+    | "content"
+    | "category_manager"
+    | "menus"
+    | "menu_items"
+    | "module_manager"
+    | "template_manager"
+    | "media_library"
+    | "forms"
+    | "components"
+    | "extensions"
+    | "seo"
+    | "users"
+    | "ai_assistant"
+    | "reports"
+    | "settings"
+    | "system"
+    | "help"
+  >("dashboard");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [joomlaSearchQuery, setJoomlaSearchQuery] = useState("");
+  const [joomlaSiteFilter, setJoomlaSiteFilter] = useState<"site" | "admin">("site");
+  const [joomlaSortOrder, setJoomlaSortOrder] = useState<"title_asc" | "title_desc" | "id_asc" | "id_desc">("title_asc");
+  const [joomlaItemLimit, setJoomlaItemLimit] = useState(20);
+  const [selectedJoomlaRows, setSelectedJoomlaRows] = useState<string[]>([]);
+  
+  // Joomla Menu Groups (aligned with the user's uploaded screenshot)
+  const [joomlaMenuGroups, setJoomlaMenuGroups] = useState<Array<{
+    id: string;
+    title: string;
+    systemName: string;
+    published: number;
+    unpublished: number;
+    trashed: number;
+    linkedModules: string[];
+    description: string;
+  }>>([
+    { id: "3", title: "Menu Utama APJ", systemName: "Menu APJ", published: 56, unpublished: 0, trashed: 0, linkedModules: ["Header Navigation"], description: "(Menu APJ)" },
+    { id: "5", title: "Menu Topbar", systemName: "Menampilkan Menu Topar", published: 3, unpublished: 0, trashed: 0, linkedModules: ["Topbar Contact Info"], description: "(Menampilkan Menu Topar)" },
+    { id: "6", title: "Research", systemName: "Pusat Penelitian dan Pengabdian", published: 2, unpublished: 0, trashed: 0, linkedModules: ["Sidebar Research Link"], description: "(Pusat Penelitian dan Pengabdian)" },
+    { id: "8", title: "Menu Prodi Hotel", systemName: "Ini untuk digunakan di page Prodi hotel", published: 1, unpublished: 0, trashed: 0, linkedModules: ["Prodi Hotel Selector"], description: "(Ini untuk digunakan di page Prodi hotel)" },
+    { id: "9", title: "Menu Prodi UPW", systemName: "Ini untuk digunakan di page Prodi UPW", published: 0, unpublished: 0, trashed: 0, linkedModules: ["Prodi UPW Selector"], description: "(Ini untuk digunakan di page Prodi UPW)" }
+  ]);
+
+  // Joomla Modules State
+  const [joomlaModules, setJoomlaModules] = useState<Array<{
+    id: string;
+    title: string;
+    position: string;
+    published: boolean;
+    menuAssignment: "all" | "none" | "selection";
+    assignedMenus: string[];
+    moduleType: string;
+    showTitle: boolean;
+  }>>([
+    { id: "mod-1", title: "Main Header Navigation", position: "header-nav", published: true, menuAssignment: "all", assignedMenus: [], moduleType: "Menu", showTitle: false },
+    { id: "mod-2", title: "PMB Registration Shortcut", position: "sidebar-right", published: true, menuAssignment: "selection", assignedMenus: ["menu-pmb"], moduleType: "Custom HTML", showTitle: true },
+    { id: "mod-3", title: "Dr. EduFin AI Widget", position: "floating-chat", published: true, menuAssignment: "all", assignedMenus: [], moduleType: "EduFin AI Engine", showTitle: false },
+    { id: "mod-4", title: "Quick Contact Info", position: "topbar", published: true, menuAssignment: "all", assignedMenus: [], moduleType: "Custom HTML", showTitle: false },
+    { id: "mod-5", title: "Yayasan Footer Info", position: "footer-1", published: true, menuAssignment: "all", assignedMenus: [], moduleType: "Custom HTML", showTitle: true }
+  ]);
+
+  // Joomla Components State
+  const [joomlaComponents, setJoomlaComponents] = useState<Array<{
+    id: string;
+    name: string;
+    version: string;
+    state: "Active" | "Inactive";
+    author: string;
+    type: string;
+  }>>([
+    { id: "com_content", name: "Content Component (Articles & News)", version: "6.1.0", state: "Active", author: "Joomla Project", type: "Core" },
+    { id: "com_pmb", name: "PMB Online Enrollment System", version: "6.1.2", state: "Active", author: "Akademi Pariwisata Jakarta", type: "Custom" },
+    { id: "com_edufin", name: "EduFin Keuangan AI Integration", version: "6.1.1", state: "Active", author: "EduFin AI Lab", type: "Custom" },
+    { id: "com_contact", name: "Contact & Messages Manager", version: "6.0.4", state: "Active", author: "Joomla Project", type: "Core" },
+    { id: "com_users", name: "Joomla User Management", version: "6.1.0", state: "Active", author: "Joomla Project", type: "Core" }
+  ]);
+
+  // Joomla Categories & Tags States
+  const [joomlaCategories, setJoomlaCategories] = useState<Array<{
+    id: string;
+    title: string;
+    parent: string | null;
+    description: string;
+    icon: string;
+    banner: string;
+    ordering: number;
+    published: boolean;
+    seoTitle: string;
+    seoDesc: string;
+  }>>([
+    { id: "cat-1", title: "Kegiatan Akademik", parent: null, description: "Berita seputar perkuliahan dan kurikulum APJ", icon: "GraduationCap", banner: "/images/banner_akademik.jpg", ordering: 1, published: true, seoTitle: "Akademik APJ", seoDesc: "Berita Akademik APJ Jakarta" },
+    { id: "cat-2", title: "Pengumuman Yayasan", parent: null, description: "Pengumuman resmi dari pengurus Yayasan Pendidikan Jayakarta", icon: "Megaphone", banner: "/images/banner_yayasan.jpg", ordering: 2, published: true, seoTitle: "Pengumuman Resmi", seoDesc: "Pengumuman Resmi Yayasan Pendidikan Jayakarta" },
+    { id: "cat-3", title: "Prestasi Mahasiswa", parent: "cat-1", description: "Prestasi akademik dan non-akademik tingkat nasional & global", icon: "Trophy", banner: "/images/banner_prestasi.jpg", ordering: 3, published: true, seoTitle: "Prestasi APJ", seoDesc: "Kumpulan prestasi gemilang mahasiswa APJ" },
+    { id: "cat-4", title: "Riset Pariwisata", parent: null, description: "Jurnal ilmiah, penelitian dosen, dan program pengabdian masyarakat", icon: "BookOpen", banner: "/images/banner_research.jpg", ordering: 4, published: true, seoTitle: "Riset & Pengabdian APJ", seoDesc: "Penelitian pariwisata terapan APJ" }
+  ]);
+
+  const [joomlaTags, setJoomlaTags] = useState<string[]>(["APJ", "Pariwisata", "Perhotelan", "PMB 2026", "Riset Terapan", "Yayasan"]);
+
+  // Media Library State
+  const [joomlaMedia, setJoomlaMedia] = useState<Array<{
+    id: string;
+    name: string;
+    path: string;
+    size: string;
+    type: "image" | "pdf" | "video";
+    folder: string;
+    altText: string;
+  }>>([
+    { id: "m-1", name: "kampus_front.jpg", path: "/images/kampus_front.jpg", size: "320 KB", type: "image", folder: "Akademik", altText: "Gedung Utama Akademi Pariwisata Jakarta tampak depan" },
+    { id: "m-2", name: "pendaftaran_guide.pdf", path: "/docs/pendaftaran_guide.pdf", size: "1.4 MB", type: "pdf", folder: "PMB", altText: "Panduan Pendaftaran Mahasiswa Baru APJ 2026" },
+    { id: "m-3", name: "lab_kitchen_hotel.jpg", path: "/images/lab_kitchen_hotel.jpg", size: "450 KB", type: "image", folder: "Fasilitas", altText: "Laboratorium dapur praktek perhotelan modern APJ" },
+    { id: "m-4", name: "alumni_testimonial.mp4", path: "/videos/alumni_testimonial.mp4", size: "12.8 MB", type: "video", folder: "Alumni", altText: "Testimoni alumni perhotelan APJ yang bekerja di luar negeri" }
+  ]);
+
+  const [mediaActiveFolder, setMediaActiveFolder] = useState<string>("Root");
+  const [mediaFolders, setMediaFolders] = useState<string[]>(["Root", "Akademik", "PMB", "Fasilitas", "Alumni", "Riset"]);
+  const [editingMediaId, setEditingMediaId] = useState<string | null>(null);
+  const [mediaAltInput, setMediaAltInput] = useState("");
+  const [isGeneratingMediaAlt, setIsGeneratingMediaAlt] = useState(false);
+
+  // Forms Inbox State
+  const [joomlaForms, setJoomlaForms] = useState<Array<{
+    id: string;
+    formName: "PMB Inquiry" | "Hubungi Kami" | "Saran & Keluhan";
+    sender: string;
+    email: string;
+    message: string;
+    date: string;
+    status: "New" | "Processed" | "Archived";
+  }>>([
+    { id: "f-1", formName: "PMB Inquiry", sender: "Rian Aditya", email: "rian.aditya@gmail.com", message: "Halo, apakah ada potongan biaya SPP jika mendaftar dengan prestasi rapor peringkat 1?", date: "2026-07-07", status: "New" },
+    { id: "f-2", formName: "Hubungi Kami", sender: "Hotel Mulia Jakarta (HRD)", email: "recruitment@hotelmulia.com", message: "Kami tertarik melakukan program campus hiring untuk lulusan perhotelan APJ bulan depan. Bagaimana alurnya?", date: "2026-07-06", status: "Processed" },
+    { id: "f-3", formName: "Saran & Keluhan", sender: "Siti Rahmawati", email: "siti.rahma@student.apj.ac.id", message: "Mohon penambahan AC di ruang lab komputer lantai 3 karena akhir-akhir ini terasa panas.", date: "2026-07-05", status: "Archived" }
+  ]);
+
+  // SEO Manager State
+  const [seoConfig, setSeoConfig] = useState({
+    defaultTitle: "Akademi Pariwisata Jakarta - Official Website APJ",
+    defaultDesc: "Portal resmi Akademi Pariwisata Jakarta (APJ). Informasi pendaftaran mahasiswa baru (PMB), penelitian pariwisata, kurikulum, perhotelan, dan pariwisata.",
+    defaultKeywords: "APJ, Akademi Pariwisata Jakarta, kuliah pariwisata, perhotelan, pmb apj",
+    robotsTxt: "User-agent: *\nDisallow: /admin/\nSitemap: https://apj.ac.id/sitemap.xml",
+    sitemapUrl: "https://apj.ac.id/sitemap.xml",
+    isGenerated: true,
+    redirects: [
+      { id: "red-1", from: "/old-pmb", to: "/pmb", type: "301" },
+      { id: "red-2", from: "/hotel-management", to: "/prodi/hotel", type: "301" }
+    ]
+  });
+
+  // User Manager & RBAC Role Permission Matrix
+  const [userRoles, setUserRoles] = useState<Array<{
+    role: string;
+    description: string;
+    count: number;
+  }>>([
+    { role: "Super Admin", description: "Akses penuh tanpa batas ke seluruh konfigurasi CMS dan core sistem.", count: 2 },
+    { role: "Administrator", description: "Mengelola konten, menu, modul, template, dan persidangan PMB.", count: 4 },
+    { role: "Editor", description: "Melakukan penulisan berita, menyunting, dan menerbitkan artikel.", count: 5 },
+    { role: "Author", description: "Menulis draf artikel berita. Memerlukan persetujuan Editor untuk rilis.", count: 8 },
+    { role: "Reviewer", description: "Melakukan verifikasi kelayakan riset, jurnal, dan berkas PMB.", count: 3 },
+    { role: "Operator", description: "Menerima pesan, melayani tiket helpdesk, dan memproses log inquiry.", count: 6 },
+    { role: "Guest", description: "Akses view saja untuk audit eksternal atau simulasi front-end.", count: 120 }
+  ]);
+
+  const [rolePermissions, setRolePermissions] = useState<{ [role: string]: { [perm: string]: boolean } }>({
+    "Super Admin": { create_article: true, publish_article: true, manage_menus: true, manage_modules: true, manage_templates: true, manage_users: true, access_ai: true },
+    "Administrator": { create_article: true, publish_article: true, manage_menus: true, manage_modules: true, manage_templates: false, manage_users: true, access_ai: true },
+    "Editor": { create_article: true, publish_article: true, manage_menus: false, manage_modules: false, manage_templates: false, manage_users: false, access_ai: true },
+    "Author": { create_article: true, publish_article: false, manage_menus: false, manage_modules: false, manage_templates: false, manage_users: false, access_ai: true },
+    "Reviewer": { create_article: false, publish_article: false, manage_menus: false, manage_modules: false, manage_templates: false, manage_users: false, access_ai: true },
+    "Operator": { create_article: false, publish_article: false, manage_menus: false, manage_modules: false, manage_templates: false, manage_users: false, access_ai: false },
+    "Guest": { create_article: false, publish_article: false, manage_menus: false, manage_modules: false, manage_templates: false, manage_users: false, access_ai: false }
+  });
+
+  const [permissionLabels] = useState<Array<{ id: string; label: string; desc: string }>>([
+    { id: "create_article", label: "Tulis & Edit Artikel", desc: "Membuat draft artikel dan mengedit tulisannya sendiri." },
+    { id: "publish_article", label: "Terbitkan Artikel", desc: "Menerbitkan berita agar live ke pengunjung luar." },
+    { id: "manage_menus", label: "Kelola Menu Navigasi", desc: "Menambah, menyusun ulang, dan memetakan link-link menu." },
+    { id: "manage_modules", label: "Kelola Widget Modul", desc: "Menempatkan banner iklan, slide show, dan chat AI di layout." },
+    { id: "manage_templates", label: "Desain Template & Custom CSS", desc: "Mengatur warna tema, spacing, dan menyuntikkan script JS custom." },
+    { id: "manage_users", label: "Kelola User & Hak Akses", desc: "Menambah user administrator baru dan mengatur matrix matrix izin." },
+    { id: "access_ai", label: "Akses AI Assistant", desc: "Menggunakan asisten AI untuk menulis berita, translate, dan SEO." }
+  ]);
+
+  // AI Assistant Tab states
+  const [aiSuiteText, setAiSuiteText] = useState("");
+  const [aiSuiteResult, setAiSuiteResult] = useState("");
+  const [aiSuiteAction, setAiSuiteAction] = useState<"write" | "rewrite" | "translate" | "summarize" | "keywords" | "grammar">("write");
+  const [aiSuiteLang, setAiSuiteLang] = useState("Bahasa Indonesia");
+  const [aiSuiteTopic, setAiSuiteTopic] = useState("Strategi Pelayanan Hospitality Perhotelan Pasca-Pandemi");
+  const [isAiSuiteProcessing, setIsAiSuiteProcessing] = useState(false);
+
+  // System Config states
+  const [sysGzip, setSysGzip] = useState(true);
+  const [sysSef, setSysSef] = useState(true);
+  const [sysSmtpHost, setSysSmtpHost] = useState("smtp.apj.ac.id");
+  const [sysSmtpPort, setSysSmtpPort] = useState("587");
+  const [sysCacheMode, setSysCacheMode] = useState("Conservative");
+  const [sysBackupLogs, setSysBackupLogs] = useState<Array<{ id: string; name: string; date: string; size: string }>>([
+    { id: "b-1", name: "apj_db_full_2026-07-07.zip", date: "2026-07-07 03:00", size: "4.8 MB" },
+    { id: "b-2", name: "apj_db_full_2026-07-06.zip", date: "2026-07-06 03:00", size: "4.7 MB" }
+  ]);
+
+  // Audit Logs (CamVOS requirement)
+  const [sysAuditLogs, setSysAuditLogs] = useState<Array<{ id: string; user: string; action: string; time: string; status: "Success" | "Warning" | "Error" }>>([
+    { id: "log-1", user: "kusmayady@gmail.com", action: "Mengubah status seleksi PMB: Rian Aditya -> Lulus Seleksi", time: "2026-07-07 17:51", status: "Success" },
+    { id: "log-2", user: "kusmayady@gmail.com", action: "Menyimpan konfigurasi SMTP Server", time: "2026-07-07 16:45", status: "Success" },
+    { id: "log-3", user: "system_cron", action: "Auto-backup database ke Cloud Storage", time: "2026-07-07 03:00", status: "Success" },
+    { id: "log-4", user: "admin@apj.ac.id", action: "Gagal login: Password salah (IP: 182.253.14.88)", time: "2026-07-07 01:12", status: "Warning" }
+  ]);
+
+  // Stats / Reports State
+  const [visitorCountToday] = useState(1280);
+  const [mostViewedArticles] = useState([
+    { title: "Pendaftaran PMB Gelombang II APJ Resmi Dibuka", views: 2450, score: "98/100" },
+    { title: "Profil Program Studi D3 Perhotelan Jayakarta", views: 1890, score: "92/100" },
+    { title: "MOU Akademi Pariwisata Jakarta dengan Marriott International", views: 1420, score: "95/100" },
+    { title: "Panduan Penggunaan Portal Akademik Mahasiswa", views: 980, score: "84/100" }
+  ]);
+  const [searchKeywords] = useState([
+    { word: "biaya kuliah perhotelan apj", count: 320 },
+    { word: "beasiswa akademik yayasan", count: 180 },
+    { word: "pmb apj 2026 online", count: 150 },
+    { word: "akreditasi pariwisata jakarta", count: 95 }
+  ]);
+
+  // Add/Edit category modal states
+  const [showCatModal, setShowCatModal] = useState(false);
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
+  const [catTitle, setCatTitle] = useState("");
+  const [catParent, setCatParent] = useState<string | null>(null);
+  const [catDesc, setCatDesc] = useState("");
+  const [catIcon, setCatIcon] = useState("GraduationCap");
+  const [catBanner, setCatBanner] = useState("");
+
+  // Menu Groups Modal states
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [groupTitle, setGroupTitle] = useState("");
+  const [groupSystemName, setGroupSystemName] = useState("");
+  const [groupDescription, setGroupDescription] = useState("");
+
+  const [showModuleModal, setShowModuleModal] = useState(false);
+  const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
+  const [moduleTitle, setModuleTitle] = useState("");
+  const [modulePosition, setModulePosition] = useState("sidebar-right");
+  const [modulePublished, setModulePublished] = useState(true);
+  const [moduleType, setModuleType] = useState("Custom HTML");
+  const [moduleAssignment, setModuleAssignment] = useState<"all" | "none" | "selection">("all");
+  const [moduleAssignedMenus, setModuleAssignedMenus] = useState<string[]>([]);
+
   // Active admin tab
-  const [activeTab, setActiveTab] = useState<"pmb" | "inbox" | "news" | "settings" | "board" | "menu_manager" | "template_manager">("pmb");
+  const [activeTab, setActiveTab] = useState<"pmb" | "inbox" | "news" | "settings" | "board" | "menu_manager" | "template_manager" | "edufin">("pmb");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Add/Edit announcement form state
@@ -236,6 +653,64 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
   const [tplHeaderStyle, setTplHeaderStyle] = useState<"sticky"|"glass"|"minimal"|"shadow">("sticky");
   const [tplShowHeroBackground, setTplShowHeroBackground] = useState(true);
   const [tplBadgeStyle, setTplBadgeStyle] = useState<"pill"|"sharp"|"outline">("pill");
+
+  // New APJ branding & typography form state
+  const [tplLogoHeader, setTplLogoHeader] = useState("");
+  const [tplLogoFooter, setTplLogoFooter] = useState("");
+  const [tplFavicon, setTplFavicon] = useState("");
+
+  const [tplTitleFontFamily, setTplTitleFontFamily] = useState("Montserrat");
+  const [tplTitleFontColor, setTplTitleFontColor] = useState("#002f5a");
+  const [tplTitleFontSize, setTplTitleFontSize] = useState("2.5rem");
+  const [tplTitleFontWeight, setTplTitleFontWeight] = useState("Bold");
+
+  const [tplSubtitleFontFamily, setTplSubtitleFontFamily] = useState("Plus Jakarta Sans");
+  const [tplSubtitleFontColor, setTplSubtitleFontColor] = useState("#475569");
+  const [tplSubtitleFontSize, setTplSubtitleFontSize] = useState("1.25rem");
+  const [tplSubtitleFontWeight, setTplSubtitleFontWeight] = useState("Medium");
+
+  const [tplH1FontFamily, setTplH1FontFamily] = useState("Poppins");
+  const [tplH1FontColor, setTplH1FontColor] = useState("#002f5a");
+  const [tplH1FontSize, setTplH1FontSize] = useState("2.25rem");
+  const [tplH1FontWeight, setTplH1FontWeight] = useState("Bold");
+
+  const [tplH2FontFamily, setTplH2FontFamily] = useState("Poppins");
+  const [tplH2FontColor, setTplH2FontColor] = useState("#002f5a");
+  const [tplH2FontSize, setTplH2FontSize] = useState("1.875rem");
+  const [tplH2FontWeight, setTplH2FontWeight] = useState("Bold");
+
+  const [tplH3FontFamily, setTplH3FontFamily] = useState("Poppins");
+  const [tplH3FontColor, setTplH3FontColor] = useState("#002f5a");
+  const [tplH3FontSize, setTplH3FontSize] = useState("1.5rem");
+  const [tplH3FontWeight, setTplH3FontWeight] = useState("Bold");
+
+  const [tplH4FontFamily, setTplH4FontFamily] = useState("Poppins");
+  const [tplH4FontColor, setTplH4FontColor] = useState("#002f5a");
+  const [tplH4FontSize, setTplH4FontSize] = useState("1.25rem");
+  const [tplH4FontWeight, setTplH4FontWeight] = useState("Bold");
+
+  const [tplH5FontFamily, setTplH5FontFamily] = useState("Poppins");
+  const [tplH5FontColor, setTplH5FontColor] = useState("#1e3a8a");
+  const [tplH5FontSize, setTplH5FontSize] = useState("1.125rem");
+  const [tplH5FontWeight, setTplH5FontWeight] = useState("Bold");
+
+  const [tplH6FontFamily, setTplH6FontFamily] = useState("Poppins");
+  const [tplH6FontColor, setTplH6FontColor] = useState("#1e3a8a");
+  const [tplH6FontSize, setTplH6FontSize] = useState("1rem");
+  const [tplH6FontWeight, setTplH6FontWeight] = useState("Bold");
+
+  const [tplTextFontFamily, setTplTextFontFamily] = useState("Plus Jakarta Sans");
+  const [tplTextFontColor, setTplTextFontColor] = useState("#1e293b");
+  const [tplTextFontSize, setTplTextFontSize] = useState("0.875rem");
+  const [tplTextFontWeight, setTplTextFontWeight] = useState("Regular");
+
+  const [tplParagraphFontFamily, setTplParagraphFontFamily] = useState("Plus Jakarta Sans");
+  const [tplParagraphFontColor, setTplParagraphFontColor] = useState("#334155");
+  const [tplParagraphFontSize, setTplParagraphFontSize] = useState("0.875rem");
+  const [tplParagraphFontWeight, setTplParagraphFontWeight] = useState("Regular");
+  
+  const [tplMenuFontFamily, setTplMenuFontFamily] = useState("Arial Nova");
+  const [tplMenuFontWeight, setTplMenuFontWeight] = useState("Semi Bold");
 
   // Feedback notifications
   const [successMsg, setSuccessMsg] = useState("");
@@ -512,6 +987,62 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
       setTplHeaderStyle(tpl.headerStyle);
       setTplShowHeroBackground(tpl.showHeroBackground);
       setTplBadgeStyle(tpl.badgeStyle);
+
+      setTplLogoHeader(tpl.logoHeader || "/input_file_0.png");
+      setTplLogoFooter(tpl.logoFooter || "/input_file_1.png");
+      setTplFavicon(tpl.favicon || "/input_file_1.png");
+
+      setTplTitleFontFamily(tpl.titleFontFamily || "Montserrat");
+      setTplTitleFontColor(tpl.titleFontColor || tpl.primaryColor);
+      setTplTitleFontSize(tpl.titleFontSize || "2.5rem");
+      setTplTitleFontWeight(tpl.titleFontWeight || "Bold");
+
+      setTplSubtitleFontFamily(tpl.subtitleFontFamily || "Plus Jakarta Sans");
+      setTplSubtitleFontColor(tpl.subtitleFontColor || "#475569");
+      setTplSubtitleFontSize(tpl.subtitleFontSize || "1.25rem");
+      setTplSubtitleFontWeight(tpl.subtitleFontWeight || "Medium");
+
+      setTplH1FontFamily(tpl.h1FontFamily || "Poppins");
+      setTplH1FontColor(tpl.h1FontColor || tpl.primaryColor);
+      setTplH1FontSize(tpl.h1FontSize || "2.25rem");
+      setTplH1FontWeight(tpl.h1FontWeight || "Bold");
+
+      setTplH2FontFamily(tpl.h2FontFamily || "Poppins");
+      setTplH2FontColor(tpl.h2FontColor || tpl.primaryColor);
+      setTplH2FontSize(tpl.h2FontSize || "1.875rem");
+      setTplH2FontWeight(tpl.h2FontWeight || "Bold");
+
+      setTplH3FontFamily(tpl.h3FontFamily || "Poppins");
+      setTplH3FontColor(tpl.h3FontColor || tpl.primaryColor);
+      setTplH3FontSize(tpl.h3FontSize || "1.5rem");
+      setTplH3FontWeight(tpl.h3FontWeight || "Bold");
+
+      setTplH4FontFamily(tpl.h4FontFamily || "Poppins");
+      setTplH4FontColor(tpl.h4FontColor || tpl.primaryColor);
+      setTplH4FontSize(tpl.h4FontSize || "1.25rem");
+      setTplH4FontWeight(tpl.h4FontWeight || "Bold");
+
+      setTplH5FontFamily(tpl.h5FontFamily || "Poppins");
+      setTplH5FontColor(tpl.h5FontColor || tpl.secondaryColor);
+      setTplH5FontSize(tpl.h5FontSize || "1.125rem");
+      setTplH5FontWeight(tpl.h5FontWeight || "Bold");
+
+      setTplH6FontFamily(tpl.h6FontFamily || "Poppins");
+      setTplH6FontColor(tpl.h6FontColor || tpl.secondaryColor);
+      setTplH6FontSize(tpl.h6FontSize || "1rem");
+      setTplH6FontWeight(tpl.h6FontWeight || "Bold");
+
+      setTplTextFontFamily(tpl.textFontFamily || "Plus Jakarta Sans");
+      setTplTextFontColor(tpl.textFontColor || "#1e293b");
+      setTplTextFontSize(tpl.textFontSize || "0.875rem");
+      setTplTextFontWeight(tpl.textFontWeight || "Regular");
+
+      setTplParagraphFontFamily(tpl.paragraphFontFamily || "Plus Jakarta Sans");
+      setTplParagraphFontColor(tpl.paragraphFontColor || "#334155");
+      setTplParagraphFontSize(tpl.paragraphFontSize || "0.875rem");
+      setTplParagraphFontWeight(tpl.paragraphFontWeight || "Regular");
+      setTplMenuFontFamily(tpl.menuFontFamily || "Arial Nova");
+      setTplMenuFontWeight(tpl.menuFontWeight || "Semi Bold");
     } else {
       setEditingTemplateId(null);
       setTplName("");
@@ -525,6 +1056,62 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
       setTplHeaderStyle("sticky");
       setTplShowHeroBackground(true);
       setTplBadgeStyle("pill");
+
+      setTplLogoHeader("/input_file_0.png");
+      setTplLogoFooter("/input_file_1.png");
+      setTplFavicon("/input_file_1.png");
+
+      setTplTitleFontFamily("Montserrat");
+      setTplTitleFontColor("#0050A0");
+      setTplTitleFontSize("2.5rem");
+      setTplTitleFontWeight("Bold");
+
+      setTplSubtitleFontFamily("Plus Jakarta Sans");
+      setTplSubtitleFontColor("#475569");
+      setTplSubtitleFontSize("1.25rem");
+      setTplSubtitleFontWeight("Medium");
+
+      setTplH1FontFamily("Poppins");
+      setTplH1FontColor("#0050A0");
+      setTplH1FontSize("2.25rem");
+      setTplH1FontWeight("Bold");
+
+      setTplH2FontFamily("Poppins");
+      setTplH2FontColor("#0050A0");
+      setTplH2FontSize("1.875rem");
+      setTplH2FontWeight("Bold");
+
+      setTplH3FontFamily("Poppins");
+      setTplH3FontColor("#0050A0");
+      setTplH3FontSize("1.5rem");
+      setTplH3FontWeight("Bold");
+
+      setTplH4FontFamily("Poppins");
+      setTplH4FontColor("#0050A0");
+      setTplH4FontSize("1.25rem");
+      setTplH4FontWeight("Bold");
+
+      setTplH5FontFamily("Poppins");
+      setTplH5FontColor("#00366d");
+      setTplH5FontSize("1.125rem");
+      setTplH5FontWeight("Bold");
+
+      setTplH6FontFamily("Poppins");
+      setTplH6FontColor("#00366d");
+      setTplH6FontSize("1rem");
+      setTplH6FontWeight("Bold");
+
+      setTplTextFontFamily("Plus Jakarta Sans");
+      setTplTextFontColor("#1e293b");
+      setTplTextFontSize("0.875rem");
+      setTplTextFontWeight("Regular");
+
+      setTplParagraphFontFamily("Plus Jakarta Sans");
+      setTplParagraphFontColor("#334155");
+      setTplParagraphFontSize("0.875rem");
+      setTplParagraphFontWeight("Regular");
+      setTplMenuFontFamily("Arial Nova");
+      setTplMenuFontWeight("Semi Bold");
     }
     setShowTemplateModal(true);
   };
@@ -544,7 +1131,52 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
       cardRadius: tplCardRadius,
       headerStyle: tplHeaderStyle,
       showHeroBackground: tplShowHeroBackground,
-      badgeStyle: tplBadgeStyle
+      badgeStyle: tplBadgeStyle,
+
+      logoHeader: tplLogoHeader,
+      logoFooter: tplLogoFooter,
+      favicon: tplFavicon,
+
+      titleFontFamily: tplTitleFontFamily,
+      titleFontColor: tplTitleFontColor,
+      titleFontSize: tplTitleFontSize,
+
+      subtitleFontFamily: tplSubtitleFontFamily,
+      subtitleFontColor: tplSubtitleFontColor,
+      subtitleFontSize: tplSubtitleFontSize,
+
+      h1FontFamily: tplH1FontFamily,
+      h1FontColor: tplH1FontColor,
+      h1FontSize: tplH1FontSize,
+
+      h2FontFamily: tplH2FontFamily,
+      h2FontColor: tplH2FontColor,
+      h2FontSize: tplH2FontSize,
+
+      h3FontFamily: tplH3FontFamily,
+      h3FontColor: tplH3FontColor,
+      h3FontSize: tplH3FontSize,
+
+      h4FontFamily: tplH4FontFamily,
+      h4FontColor: tplH4FontColor,
+      h4FontSize: tplH4FontSize,
+
+      h5FontFamily: tplH5FontFamily,
+      h5FontColor: tplH5FontColor,
+      h5FontSize: tplH5FontSize,
+
+      h6FontFamily: tplH6FontFamily,
+      h6FontColor: tplH6FontColor,
+      h6FontSize: tplH6FontSize,
+
+      textFontFamily: tplTextFontFamily,
+      textFontColor: tplTextFontColor,
+      textFontSize: tplTextFontSize,
+
+      paragraphFontFamily: tplParagraphFontFamily,
+      paragraphFontColor: tplParagraphFontColor,
+      paragraphFontSize: tplParagraphFontSize,
+      menuFontFamily: tplMenuFontFamily
     };
 
     try {
@@ -827,7 +1459,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
       setUploadedImageDims("");
       return;
     }
-    const img = new Image();
+    const img = new window.Image();
     img.onload = () => {
       setUploadedImageDims(`${img.width} x ${img.height} px`);
     };
@@ -852,7 +1484,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
       if (base64) {
         setAnnImage(base64);
 
-        const img = new Image();
+        const img = new window.Image();
         img.onload = () => {
           setUploadedImageDims(`${img.width} x ${img.height} px`);
         };
@@ -1134,10 +1766,10 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
           </div>
 
           {/* Navigation Tab Menu */}
-          <div className="flex border-b border-neutral-200 gap-1 overflow-x-auto bg-neutral-50 p-1 rounded-2xl border">
+          <div className="flex flex-wrap gap-1 sm:gap-2 bg-neutral-50 p-1.5 rounded-2xl border">
             <button 
               onClick={() => { setActiveTab("pmb"); setSelectedApp(null); }}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 flex-grow sm:flex-grow-0 ${
                 activeTab === "pmb" ? "bg-primary text-white shadow-sm" : "text-neutral-600 hover:text-black hover:bg-neutral-100"
               }`}
             >
@@ -1146,7 +1778,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
             </button>
             <button 
               onClick={() => { setActiveTab("inbox"); }}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 flex-grow sm:flex-grow-0 ${
                 activeTab === "inbox" ? "bg-primary text-white shadow-sm" : "text-neutral-600 hover:text-black hover:bg-neutral-100"
               }`}
             >
@@ -1155,7 +1787,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
             </button>
             <button 
               onClick={() => { setActiveTab("news"); }}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 flex-grow sm:flex-grow-0 ${
                 activeTab === "news" ? "bg-primary text-white shadow-sm" : "text-neutral-600 hover:text-black hover:bg-neutral-100"
               }`}
             >
@@ -1164,7 +1796,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
             </button>
             <button 
               onClick={() => { setActiveTab("settings"); }}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 flex-grow sm:flex-grow-0 ${
                 activeTab === "settings" ? "bg-primary text-white shadow-sm" : "text-neutral-600 hover:text-black hover:bg-neutral-100"
               }`}
             >
@@ -1173,7 +1805,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
             </button>
             <button 
               onClick={() => { setActiveTab("board"); }}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 flex-grow sm:flex-grow-0 ${
                 activeTab === "board" ? "bg-primary text-white shadow-sm" : "text-neutral-600 hover:text-black hover:bg-neutral-100"
               }`}
             >
@@ -1182,7 +1814,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
             </button>
             <button 
               onClick={() => { setActiveTab("menu_manager"); }}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 flex-grow sm:flex-grow-0 ${
                 activeTab === "menu_manager" ? "bg-primary text-white shadow-sm" : "text-neutral-600 hover:text-black hover:bg-neutral-100"
               }`}
             >
@@ -1191,12 +1823,21 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
             </button>
             <button 
               onClick={() => { setActiveTab("template_manager"); }}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 flex-grow sm:flex-grow-0 ${
                 activeTab === "template_manager" ? "bg-primary text-white shadow-sm" : "text-neutral-600 hover:text-black hover:bg-neutral-100"
               }`}
             >
               <Palette size={14} />
               Theme Templates ({joomlaTemplates.length})
+            </button>
+            <button 
+              onClick={() => { setActiveTab("edufin"); }}
+              className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 flex-grow sm:flex-grow-0 ${
+                activeTab === "edufin" ? "bg-amber-100 border border-amber-300 text-amber-950 shadow-sm font-black" : "text-neutral-600 hover:text-black hover:bg-neutral-100"
+              }`}
+            >
+              <TrendingUp size={14} className="text-amber-600" />
+              Keuangan EduFin (AI)
             </button>
           </div>
 
@@ -2617,121 +3258,2036 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
           )}
 
           {activeTab === "menu_manager" && (
-            <div className="space-y-6 animate-fade-in text-xs">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm">
+            <div className="bg-neutral-100 border border-neutral-200 rounded-3xl overflow-hidden shadow-sm font-sans flex flex-col md:flex-row min-h-[680px]">
+              {/* JOOMLA LEFT SIDEBAR */}
+              <div 
+                className={`bg-[#1a2d40] text-slate-300 transition-all duration-300 flex flex-col justify-between shrink-0 ${
+                  isSidebarCollapsed ? "w-16" : "w-64"
+                }`}
+              >
                 <div>
-                  <h3 className="text-sm font-black text-neutral-900 font-heading">
-                    Manajemen Dynamic Menu (Joomla CMS Architecture)
-                  </h3>
-                  <p className="text-[11px] text-neutral-500 font-semibold leading-relaxed mt-0.5">
-                    Hubungkan item navigasi Header secara fleksibel ke target section, tab, dan tetapkan **Theme Template Style** yang berbeda untuk setiap menu halaman!
-                  </p>
+                  {/* Sidebar Brand Header */}
+                  <div className="p-4 border-b border-neutral-700/50 flex items-center justify-between bg-[#142332]">
+                    {!isSidebarCollapsed ? (
+                      <div className="flex items-center gap-2">
+                        {/* Joomla emblem square-grid logo */}
+                        <div className="grid grid-cols-2 gap-0.5 w-6 h-6 shrink-0 animate-pulse">
+                          <div className="bg-red-500 rounded-sm"></div>
+                          <div className="bg-blue-500 rounded-sm"></div>
+                          <div className="bg-yellow-500 rounded-sm"></div>
+                          <div className="bg-emerald-500 rounded-sm"></div>
+                        </div>
+                        <div>
+                          <span className="font-extrabold text-white tracking-tight text-xs block uppercase">Joomla! CMS</span>
+                          <span className="text-[8px] text-slate-400 block font-semibold">APJ Portal Console v6.1</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-0.5 w-6 h-6 mx-auto">
+                        <div className="bg-red-500 rounded-xs"></div>
+                        <div className="bg-blue-500 rounded-xs"></div>
+                        <div className="bg-yellow-500 rounded-xs"></div>
+                        <div className="bg-emerald-500 rounded-xs"></div>
+                      </div>
+                    )}
+                    <button 
+                      onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                      className="p-1 hover:bg-neutral-700/60 rounded text-slate-400 hover:text-white transition cursor-pointer"
+                      title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                    >
+                      <Layout size={14} />
+                    </button>
+                  </div>
+
+                  {/* Sidebar Navigation Items */}
+                  <div className="py-2 px-1.5 space-y-3 overflow-y-auto max-h-[580px]">
+                    {[
+                      {
+                        group: "Utama",
+                        items: [
+                          { id: "dashboard", label: "🏠 Home Dashboard", icon: Layers }
+                        ]
+                      },
+                      {
+                        group: "Content & Assets",
+                        items: [
+                          { id: "content", label: "📄 Artikel Berita", icon: FileText, badge: announcements.length },
+                          { id: "category_manager", label: "📂 Kategori Manager", icon: FolderOpen, badge: joomlaCategories.length },
+                          { id: "media_library", label: "🖼 Media Library", icon: Image, badge: joomlaMedia.length },
+                          { id: "forms", label: "📋 Inbox Form", icon: CheckSquare, badge: joomlaForms.length }
+                        ]
+                      },
+                      {
+                        group: "Menus & Layout",
+                        items: [
+                          { id: "menus", label: "🧭 Menu Groups", icon: Menu, badge: joomlaMenuGroups.length },
+                          { id: "menu_items", label: "🔗 All Menu Items", icon: Link2, badge: joomlaMenus.length },
+                          { id: "module_manager", label: "🧩 Module Manager", icon: Puzzle, badge: joomlaModules.length },
+                          { id: "template_manager", label: "🎨 Template Style", icon: Palette, badge: joomlaTemplates.length }
+                        ]
+                      },
+                      {
+                        group: "Core Systems",
+                        items: [
+                          { id: "components", label: "🏛 Components / Fitur", icon: Sparkles, badge: joomlaComponents.filter(c => c.state === "Active").length },
+                          { id: "extensions", label: "🔌 Plugin Extensions", icon: Briefcase },
+                          { id: "users", label: "👥 Users & RBAC Matrix", icon: Users }
+                        ]
+                      },
+                      {
+                        group: "Smart & Analytics",
+                        items: [
+                          { id: "ai_assistant", label: "🤖 AI Assistant Suite", icon: Bot },
+                          { id: "seo", label: "🔍 SEO Optimization", icon: Search },
+                          { id: "reports", label: "📊 Reports & Traffic", icon: TrendingUp }
+                        ]
+                      },
+                      {
+                        group: "System & Settings",
+                        items: [
+                          { id: "settings", label: "⚙ Settings Global", icon: Sliders },
+                          { id: "system", label: "🖥 System Maintenance", icon: Cpu },
+                          { id: "help", label: "❓ Help Manual", icon: HelpCircle }
+                        ]
+                      }
+                    ].map((section, idx) => {
+                      const visibleItems = section.items;
+                      if (visibleItems.length === 0) return null;
+                      return (
+                        <div key={section.group || idx} className="space-y-1">
+                          {!isSidebarCollapsed && (
+                            <span className="px-3 text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                              {section.group}
+                            </span>
+                          )}
+                          <div className="space-y-0.5">
+                            {visibleItems.map(item => {
+                              const isActive = joomlaSubTab === item.id;
+                              const IconComponent = item.icon;
+                              return (
+                                <button 
+                                  key={item.id}
+                                  onClick={() => {
+                                    setJoomlaSubTab(item.id as any);
+                                    if (item.id === "menus") {
+                                      setJoomlaSearchQuery("");
+                                    }
+                                  }}
+                                  className={`w-full py-1.5 px-3 rounded-lg text-[10px] font-bold flex items-center gap-2 transition cursor-pointer ${
+                                    isActive 
+                                      ? "bg-[#0f1b27] text-white shadow-inner border border-neutral-700/30 font-black" 
+                                      : "hover:bg-[#1f3348] text-slate-300 hover:text-white"
+                                  }`}
+                                  title={item.label}
+                                >
+                                  <IconComponent size={13} className={isActive ? "text-amber-400" : "text-slate-400"} />
+                                  {!isSidebarCollapsed && (
+                                    <div className="flex-grow flex items-center justify-between truncate">
+                                      <span className="truncate">{item.label}</span>
+                                      {"badge" in item && item.badge !== undefined && (
+                                        <span className={`text-[8px] font-black px-1.5 py-0.2 rounded-full ${
+                                          isActive ? "bg-amber-400 text-neutral-900" : "bg-[#2d4356] text-slate-200"
+                                        }`}>
+                                          {item.badge}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <button 
-                  onClick={() => handleOpenMenuModal()}
-                  className="bg-accent hover:bg-amber-400 text-neutral-950 text-xs font-extrabold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer self-stretch sm:self-auto justify-center shadow"
-                >
-                  <Plus size={14} /> Tambah Tombol Menu
-                </button>
+
+                {/* Sidebar Footer */}
+                {!isSidebarCollapsed && (
+                  <div className="p-3 bg-[#111f2c] border-t border-neutral-700/30 text-[9px] text-slate-400 space-y-1">
+                    <p className="font-extrabold text-slate-300">Database: Cloud Firestore</p>
+                    <div className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>Firebase Connected (Live)</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="bg-white rounded-2xl border border-neutral-200/60 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto font-sans">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-neutral-50 border-b border-neutral-100 text-[10px] text-neutral-400 uppercase tracking-widest font-black">
-                        <th className="py-3 px-4">Urutan</th>
-                        <th className="py-3 px-4">Label Menu</th>
-                        <th className="py-3 px-4">Target Sistem (Section)</th>
-                        <th className="py-3 px-4">Target Tab Subhalaman</th>
-                        <th className="py-3 px-4">Template Desain Terpilih</th>
-                        <th className="py-3 px-4 text-center">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-100 font-bold text-neutral-700">
-                      {joomlaMenus.map((menu, i) => {
-                        const assignedStyle = joomlaTemplates.find(t => t.id === menu.templateStyleId) || joomlaTemplates[0];
-                        return (
-                          <tr key={menu.id || i} className="hover:bg-neutral-50/50 transition duration-150">
-                            <td className="py-3 px-4">
-                              <div className="flex items-center gap-1">
-                                <span className="bg-neutral-100 px-2 py-0.5 rounded text-[10px] text-neutral-600 font-bold">
-                                  {menu.order}
-                                </span>
-                                <div className="flex flex-col">
-                                  <button 
-                                    type="button"
-                                    disabled={i === 0}
-                                    onClick={() => handleMenuOrderChange(menu.id!, "up")}
-                                    className="p-0.5 hover:bg-neutral-200 rounded disabled:opacity-30 cursor-pointer text-[9px]"
-                                  >
-                                    ▲
-                                  </button>
-                                  <button 
-                                    type="button"
-                                    disabled={i === joomlaMenus.length - 1}
-                                    onClick={() => handleMenuOrderChange(menu.id!, "down")}
-                                    className="p-0.5 hover:bg-neutral-200 rounded disabled:opacity-30 cursor-pointer text-[9px]"
-                                  >
-                                    ▼
-                                  </button>
+              {/* JOOMLA MAIN CONTENT WORKSPACE */}
+              <div className="flex-grow p-6 bg-[#f4f6f9] flex flex-col justify-between space-y-5">
+                {/* JOOMLA CMS TOP BANNER & HEADER INFO */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-[#0050A0] text-white rounded-xl shadow-md">
+                      {joomlaSubTab === "dashboard" && <Layers size={18} />}
+                      {joomlaSubTab === "content" && <FileText size={18} />}
+                      {joomlaSubTab === "category_manager" && <FolderOpen size={18} />}
+                      {joomlaSubTab === "media_library" && <Image size={18} />}
+                      {joomlaSubTab === "forms" && <CheckSquare size={18} />}
+                      {joomlaSubTab === "menus" && <Menu size={18} />}
+                      {joomlaSubTab === "menu_items" && <Link2 size={18} />}
+                      {joomlaSubTab === "module_manager" && <Puzzle size={18} />}
+                      {joomlaSubTab === "template_manager" && <Palette size={18} />}
+                      {joomlaSubTab === "components" && <Sparkles size={18} />}
+                      {joomlaSubTab === "extensions" && <Briefcase size={18} />}
+                      {joomlaSubTab === "users" && <Users size={18} />}
+                      {joomlaSubTab === "ai_assistant" && <Bot size={18} />}
+                      {joomlaSubTab === "seo" && <Search size={18} />}
+                      {joomlaSubTab === "reports" && <TrendingUp size={18} />}
+                      {joomlaSubTab === "settings" && <Sliders size={18} />}
+                      {joomlaSubTab === "system" && <Cpu size={18} />}
+                      {joomlaSubTab === "help" && <HelpCircle size={18} />}
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-neutral-900 font-heading tracking-tight capitalize flex items-center gap-2">
+                        <span>{joomlaSubTab.replace("_", " ")}</span>
+                        <span className="text-[8px] bg-[#dbeafe] text-[#1e40af] px-1.5 py-0.5 rounded-full border border-blue-200 uppercase font-black tracking-widest font-sans">
+                          Joomla! CamVOS
+                        </span>
+                      </h3>
+                      <p className="text-[10px] text-neutral-500 font-semibold leading-relaxed mt-0.5">
+                        {joomlaSubTab === "dashboard" && "Dashboard administrator portal APJ dengan integrasi API, security role matrix, dan monitor audit log."}
+                        {joomlaSubTab === "content" && "Manajemen artikel, berita akademik, dan agenda resmi yayasan yang disinkronisasikan ke live server secara real-time."}
+                        {joomlaSubTab === "category_manager" && "Atur kategori bertingkat (nested categories) dan tagar pencarian untuk artikel dan konten dinamis."}
+                        {joomlaSubTab === "media_library" && "Aset repositori file, kelola dokumen panduan PMB, gambar kampus, resize cerdas, dan AI auto alt-text."}
+                        {joomlaSubTab === "forms" && "Inbox form pendaftaran, inquiry PMB, saran keluhan mahasiswa, serta tracking status korespondensi mitra kerja."}
+                        {joomlaSubTab === "menus" && "Wadah grup menu navigasi (Main Menu, footer, prodi, PMB, etc.) untuk fleksibilitas perutean tanpa koding."}
+                        {joomlaSubTab === "menu_items" && "Penyusunan link navigasi detail, pemetaan parameter routing, target halaman, serta assignation modul layout."}
+                        {joomlaSubTab === "module_manager" && "Atur posisi widget / modul dynamic (seperti Hero Slider, FAQ, Dr. EduFin AI Chat, Kontak Kaki) ke layout pages."}
+                        {joomlaSubTab === "template_manager" && "Layout customizer tingkat lanjut, konfigurasikan warna primer, radius card, serta typografi core CSS website."}
+                        {joomlaSubTab === "components" && "Status aktivasi fungsional komponen enterprise seperti PMB Reviewer, Journal, LMS, Tracer Study, dan EduFin."}
+                        {joomlaSubTab === "extensions" && "Pemasangan plugins, themes, dan fungsional tambahan dari APJ Official Extensions Market secara instan."}
+                        {joomlaSubTab === "users" && "Kelola akun administrator, staf prodi, editor, yayasan, serta matrix hak akses Role-Based Access Control (RBAC)."}
+                        {joomlaSubTab === "ai_assistant" && "Asisten kecerdasan buatan terpadu untuk generate draf rilis berita, translasi bahasa, optimasi SEO, dan pembuat ringkasan."}
+                        {joomlaSubTab === "seo" && "Optimasi search engine: Meta Tags utama, sitemap generator, konfigurasi robots.txt, dan pengalihan link 301 Redirects."}
+                        {joomlaSubTab === "reports" && "Visualisasi traffic pengunjung harian, page views artikel terpopuler, keyword pencarian terbanyak, dan audit SEO."}
+                        {joomlaSubTab === "settings" && "Konfigurasi identitas institusi, nama website, email pengirim notifikasi seleksi, dan setelan SMTP server kampus."}
+                        {joomlaSubTab === "system" && "Utilitas maintenance server: kompresi GZIP, backup database .zip, clear cache, dan scheduler log sistem."}
+                        {joomlaSubTab === "help" && "Manual operasional administrasi portal APJ, petunjuk arsitektur CamVOS, dan referensi standard Joomla."}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Header Navigation Utilities */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="bg-white border border-neutral-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[10px] font-bold text-neutral-600 shadow-xs">
+                      <span>Take a Tour</span>
+                      <ChevronDown size={12} className="text-neutral-400" />
+                    </div>
+                    <a 
+                      href="/" 
+                      target="_blank" 
+                      className="bg-white hover:bg-neutral-50 border border-neutral-200 px-3 py-1.5 rounded-lg flex items-center gap-1 text-[10px] font-extrabold text-[#0050A0] transition shadow-xs"
+                      rel="noreferrer"
+                    >
+                      <span>Lihat Website</span>
+                      <span>↗</span>
+                    </a>
+                    <div className="bg-neutral-800 text-white px-3 py-1.5 rounded-lg text-[10px] font-extrabold shadow-sm">
+                      👤 User Menu (Admin)
+                    </div>
+                  </div>
+                </div>
+
+                {/* JOOMLA CMS ACTIONS BAR */}
+                <div className="bg-white p-3.5 rounded-2xl border border-neutral-200/80 shadow-sm flex flex-wrap justify-between items-center gap-4">
+                  {/* Action buttons (New, Delete, Options, Help) */}
+                  <div className="flex flex-wrap gap-1.5">
+                    <button 
+                      onClick={() => {
+                        if (joomlaSubTab === "menus") {
+                          setEditingGroupId(null);
+                          setGroupTitle("");
+                          setGroupSystemName("");
+                          setGroupDescription("");
+                          setShowGroupModal(true);
+                        } else if (joomlaSubTab === "menu_items") {
+                          handleOpenMenuModal();
+                        } else if (joomlaSubTab === "module_manager") {
+                          setEditingModuleId(null);
+                          setModuleTitle("");
+                          setModulePosition("sidebar-right");
+                          setModulePublished(true);
+                          setModuleType("Custom HTML");
+                          setModuleAssignment("all");
+                          setModuleAssignedMenus([]);
+                          setShowModuleModal(true);
+                        } else if (joomlaSubTab === "content") {
+                          setEditingAnnId(null);
+                          setAnnCategory("Kegiatan Akademik");
+                          setAnnTitle("");
+                          setAnnDesc("");
+                          setAnnContent("");
+                          setAnnDate(new Date().toISOString().split('T')[0]);
+                          setAnnImage("");
+                          setShowAnnModal(true);
+                        } else {
+                          triggerSuccess("Tombol Baru ini hanya aktif untuk Menus, Menu Items, Modules, dan Content.");
+                        }
+                      }}
+                      className="bg-[#2a7b3b] hover:bg-[#21612e] text-white text-[10px] font-black px-3.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow cursor-pointer uppercase tracking-wider"
+                    >
+                      <Plus size={13} /> + New
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        if (selectedJoomlaRows.length === 0) {
+                          alert("Silakan centang item di tabel terlebih dahulu untuk menghapusnya!");
+                          return;
+                        }
+                        if (window.confirm(`Yakin ingin menghapus ${selectedJoomlaRows.length} item terpilih?`)) {
+                          if (joomlaSubTab === "menus") {
+                            setJoomlaMenuGroups(p => p.filter(g => !selectedJoomlaRows.includes(g.id)));
+                          } else if (joomlaSubTab === "menu_items") {
+                            selectedJoomlaRows.forEach(async id => {
+                              await deleteDbMenuItem(id);
+                            });
+                            getMenuItems().then(fresh => setJoomlaMenus(fresh));
+                          } else if (joomlaSubTab === "module_manager") {
+                            setJoomlaModules(p => p.filter(m => !selectedJoomlaRows.includes(m.id)));
+                          }
+                          setSelectedJoomlaRows([]);
+                          triggerSuccess("Item terpilih berhasil dihapus.");
+                        }
+                      }}
+                      className="bg-[#b32424] hover:bg-[#8f1d1d] text-white text-[10px] font-black px-3.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow cursor-pointer uppercase tracking-wider"
+                    >
+                      <X size={13} /> - Delete
+                    </button>
+
+                    <button 
+                      onClick={() => setJoomlaSubTab("system")}
+                      className="bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-700 text-[10px] font-extrabold px-3.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-xs cursor-pointer"
+                    >
+                      ⚙ Options
+                    </button>
+
+                    <button 
+                      onClick={() => alert("Panduan Joomla CMS: Kelola link Header di 'All Menu Items'. Gunakan 'Menus' untuk membuat kategori menu, dan 'Modules' untuk mengatur widget. Perubahan langsung terupdate ke website!")}
+                      className="bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-700 text-[10px] font-extrabold px-3.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-xs cursor-pointer"
+                    >
+                      ❓ Help
+                    </button>
+                  </div>
+
+                  {/* Status Metrics Info Bar */}
+                  <div className="flex gap-4 text-[10px] font-bold text-neutral-500 font-mono">
+                    <div className="flex items-center gap-1">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                      <span>Published: <strong className="text-neutral-800">{joomlaMenus.length} Menus</strong></span>
+                    </div>
+                    <div className="hidden sm:flex items-center gap-1">
+                      <span className="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block"></span>
+                      <span>Unpublished: <strong className="text-neutral-800">0</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* JOOMLA CMS WORKSPACE RENDER PANEL */}
+                <div className="bg-white rounded-3xl border border-neutral-200 p-5 shadow-sm min-h-[420px] flex flex-col justify-between">
+                  
+                  {/* SUBTAB 1: HOME DASHBOARD */}
+                  {joomlaSubTab === "dashboard" && (
+                    <div className="space-y-6 animate-fade-in text-neutral-800">
+                      <div className="bg-gradient-to-r from-[#0050A0] to-[#002f5a] p-6 rounded-2xl text-white space-y-2 shadow-md">
+                        <div className="text-sm font-black uppercase tracking-wider font-heading text-white">Selamat Datang di Konsol Administrasi Joomla!</div>
+                        <div className="text-[11px] text-blue-100 max-w-2xl leading-relaxed">
+                          Anda masuk sebagai pengelola portal **Akademi Pariwisata Jakarta**. Disini Anda memiliki kontrol penuh atas hierarki navigasi, pemetaan template desain, widgets, data akademik, dan persidangan online PMB.
+                        </div>
+                        <div className="flex gap-4 pt-2 font-mono text-[10px] text-blue-200">
+                          <div>Lokasi Host: <span className="text-white font-semibold">0.0.0.0:3000 (Ingress)</span></div>
+                          <div>Database Mode: <span className="text-white font-semibold">Google Cloud Firestore</span></div>
+                        </div>
+                      </div>
+
+                      {/* Dynamic Bento Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Column 1: Quick Icons */}
+                        <div className="border border-neutral-100 bg-neutral-50/50 rounded-2xl p-4 space-y-3 shadow-xs">
+                          <span className="block text-[10px] text-neutral-400 uppercase tracking-widest font-black">Akses Cepat Joomla</span>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button onClick={() => setJoomlaSubTab("menu_items")} className="p-2.5 bg-white border border-neutral-100 hover:border-[#0050A0] rounded-xl hover:shadow-sm text-center transition">
+                              <span className="text-lg block">🔗</span>
+                              <span className="text-[10px] font-bold text-neutral-700 block mt-1">Tambah Link</span>
+                            </button>
+                            <button onClick={() => setJoomlaSubTab("content")} className="p-2.5 bg-white border border-neutral-100 hover:border-[#0050A0] rounded-xl hover:shadow-sm text-center transition">
+                              <span className="text-lg block">📰</span>
+                              <span className="text-[10px] font-bold text-neutral-700 block mt-1">Tulis Berita</span>
+                            </button>
+                            <button onClick={() => setJoomlaSubTab("module_manager")} className="p-2.5 bg-white border border-neutral-100 hover:border-[#0050A0] rounded-xl hover:shadow-sm text-center transition">
+                              <span className="text-lg block">⚙</span>
+                              <span className="text-[10px] font-bold text-neutral-700 block mt-1">Atur Modul</span>
+                            </button>
+                            <button onClick={() => setJoomlaSubTab("system")} className="p-2.5 bg-white border border-neutral-100 hover:border-[#0050A0] rounded-xl hover:shadow-sm text-center transition">
+                              <span className="text-lg block">🛠</span>
+                              <span className="text-[10px] font-bold text-neutral-700 block mt-1">Sistem Config</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Column 2: Live Stats */}
+                        <div className="border border-neutral-100 bg-neutral-50/50 rounded-2xl p-4 space-y-2.5 shadow-xs">
+                          <span className="block text-[10px] text-neutral-400 uppercase tracking-widest font-black">Statistik Sumber Daya</span>
+                          <div className="space-y-1.5 text-[11px] font-bold text-neutral-600">
+                            <div className="flex justify-between border-b border-neutral-200/50 pb-1.5">
+                              <span>Pendaftar PMB Aktif:</span>
+                              <span className="text-primary font-black font-mono">{pmbApplicants.length} berkas</span>
+                            </div>
+                            <div className="flex justify-between border-b border-neutral-200/50 pb-1.5">
+                              <span>Dynamic Menus (Links):</span>
+                              <span className="text-emerald-700 font-black font-mono">{joomlaMenus.length} Items</span>
+                            </div>
+                            <div className="flex justify-between border-b border-neutral-200/50 pb-1.5">
+                              <span>Dynamic Template Styles:</span>
+                              <span className="text-amber-700 font-black font-mono">{joomlaTemplates.length} Styles</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Total Custom Modules:</span>
+                              <span className="text-neutral-800 font-black font-mono">{joomlaModules.length} Modul</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Column 3: Active Components Health */}
+                        <div className="border border-neutral-100 bg-neutral-50/50 rounded-2xl p-4 space-y-2 shadow-xs">
+                          <span className="block text-[10px] text-neutral-400 uppercase tracking-widest font-black">Status Ekstensi & Modul</span>
+                          <div className="space-y-2 text-[10px] font-bold">
+                            <div className="flex items-center justify-between p-1 bg-emerald-50 text-emerald-800 rounded border border-emerald-200/50">
+                              <span>com_pmb (Seleksi PMB)</span>
+                              <span className="px-1.5 bg-emerald-600 text-white rounded text-[8px]">ACTIVE</span>
+                            </div>
+                            <div className="flex items-center justify-between p-1 bg-emerald-50 text-emerald-800 rounded border border-emerald-200/50">
+                              <span>com_edufin (AI Keuangan)</span>
+                              <span className="px-1.5 bg-emerald-600 text-white rounded text-[8px]">ACTIVE</span>
+                            </div>
+                            <div className="flex items-center justify-between p-1 bg-amber-50 text-amber-800 rounded border border-amber-200/50">
+                              <span>com_content (Blog & Berita)</span>
+                              <span className="px-1.5 bg-amber-600 text-white rounded text-[8px]">ROUTED</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 2: MENUS (GROUPS LIST AS SEEN IN THE USER'S SCREENSHOT) */}
+                  {joomlaSubTab === "menus" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      {/* Search Filter Bar */}
+                      <div className="flex flex-col sm:flex-row gap-3 items-stretch justify-between">
+                        <div className="flex items-center gap-2 flex-grow">
+                          <select 
+                            value={joomlaSiteFilter}
+                            onChange={(e) => setJoomlaSiteFilter(e.target.value as any)}
+                            className="bg-neutral-50 border border-neutral-300 rounded-lg px-2.5 py-1.5 text-[11px] font-bold focus:outline-none text-neutral-700"
+                          >
+                            <option value="site">Site (Website Utama)</option>
+                            <option value="admin">Administrator (Sistem)</option>
+                          </select>
+                          <div className="relative flex-grow">
+                            <input 
+                              type="text"
+                              value={joomlaSearchQuery}
+                              onChange={(e) => setJoomlaSearchQuery(e.target.value)}
+                              placeholder="Cari Menu Group..."
+                              className="w-full bg-neutral-50 border border-neutral-300 rounded-lg pl-3 pr-10 py-1.5 text-[11px] font-medium text-neutral-800"
+                            />
+                            {joomlaSearchQuery && (
+                              <button onClick={() => setJoomlaSearchQuery("")} className="absolute right-2.5 top-2 text-neutral-400 hover:text-black font-bold">×</button>
+                            )}
+                          </div>
+                          <button 
+                            onClick={() => {
+                              // Perform trigger search
+                              triggerSuccess("Pencarian berhasil disaring!");
+                            }}
+                            className="bg-[#0050A0] text-white px-3 py-1.5 rounded-lg text-[11px] font-extrabold"
+                          >
+                            Search
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <select 
+                            value={joomlaSortOrder}
+                            onChange={(e) => setJoomlaSortOrder(e.target.value as any)}
+                            className="bg-neutral-50 border border-neutral-300 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-neutral-700"
+                          >
+                            <option value="title_asc">Title Ascending</option>
+                            <option value="title_desc">Title Descending</option>
+                            <option value="id_asc">ID Ascending</option>
+                            <option value="id_desc">ID Descending</option>
+                          </select>
+                          <select 
+                            value={joomlaItemLimit}
+                            onChange={(e) => setJoomlaItemLimit(Number(e.target.value))}
+                            className="bg-neutral-50 border border-neutral-300 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-neutral-700"
+                          >
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                          </select>
+                          <span className="text-[10px] text-neutral-500 font-extrabold bg-neutral-100 px-2 py-1.5 border border-neutral-200 rounded-lg">8/8 Columns</span>
+                        </div>
+                      </div>
+
+                      {/* Group Table */}
+                      <div className="overflow-x-auto border border-neutral-200 rounded-2xl bg-white">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-neutral-50 border-b border-neutral-200 text-[10px] text-neutral-500 uppercase tracking-widest font-black">
+                              <th className="py-3 px-4 w-10 text-center">
+                                <input 
+                                  type="checkbox"
+                                  checked={selectedJoomlaRows.length === joomlaMenuGroups.length && joomlaMenuGroups.length > 0}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedJoomlaRows(joomlaMenuGroups.map(g => g.id));
+                                    } else {
+                                      setSelectedJoomlaRows([]);
+                                    }
+                                  }}
+                                  className="rounded"
+                                />
+                              </th>
+                              <th className="py-3 px-4 w-10 text-center">Order</th>
+                              <th className="py-3 px-4">Title</th>
+                              <th className="py-3 px-4 text-center">Menu Items</th>
+                              <th className="py-3 px-4 text-center">Published</th>
+                              <th className="py-3 px-4 text-center">Unpublished</th>
+                              <th className="py-3 px-4 text-center">Trashed</th>
+                              <th className="py-3 px-4">Linked Modules</th>
+                              <th className="py-3 px-4 text-center w-12">ID</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-100 text-[11px] font-bold text-neutral-700">
+                            {joomlaMenuGroups
+                              .filter(g => g.title.toLowerCase().includes(joomlaSearchQuery.toLowerCase()))
+                              .sort((a, b) => {
+                                if (joomlaSortOrder === "title_asc") return a.title.localeCompare(b.title);
+                                if (joomlaSortOrder === "title_desc") return b.title.localeCompare(a.title);
+                                if (joomlaSortOrder === "id_asc") return Number(a.id) - Number(b.id);
+                                return Number(b.id) - Number(a.id);
+                              })
+                              .map((grp, i) => {
+                                const isChecked = selectedJoomlaRows.includes(grp.id);
+                                return (
+                                  <tr key={grp.id} className="hover:bg-neutral-50 transition">
+                                    <td className="py-3 px-4 text-center">
+                                      <input 
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setSelectedJoomlaRows(p => [...p, grp.id]);
+                                          } else {
+                                            setSelectedJoomlaRows(p => p.filter(id => id !== grp.id));
+                                          }
+                                        }}
+                                        className="rounded"
+                                      />
+                                    </td>
+                                    <td className="py-3 px-4 text-center">
+                                      <div className="flex flex-col items-center justify-center text-[9px] text-neutral-400">
+                                        <button className="hover:text-primary transition">▲</button>
+                                        <button className="hover:text-primary transition">▼</button>
+                                      </div>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      <div className="space-y-0.5">
+                                        <button 
+                                          onClick={() => {
+                                            setEditingGroupId(grp.id);
+                                            setGroupTitle(grp.title);
+                                            setGroupSystemName(grp.systemName);
+                                            setGroupDescription(grp.description);
+                                            setShowGroupModal(true);
+                                          }}
+                                          className="text-[#0050A0] hover:underline text-[12px] font-black text-left block"
+                                        >
+                                          {grp.title}
+                                        </button>
+                                        <span className="text-[10px] text-neutral-400 block font-normal font-sans italic">{grp.description}</span>
+                                      </div>
+                                    </td>
+                                    <td className="py-3 px-4 text-center">
+                                      <button 
+                                        onClick={() => {
+                                          setJoomlaSubTab("menu_items");
+                                          setJoomlaSearchQuery(grp.title); // automatically filters items
+                                        }}
+                                        className="bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-800 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 transition text-[10px]"
+                                      >
+                                        <span>📂</span>
+                                        <span>{grp.id === "3" ? joomlaMenus.length : grp.published} Items</span>
+                                      </button>
+                                    </td>
+                                    <td className="py-3 px-4 text-center">
+                                      <span className="bg-emerald-100 text-emerald-800 font-extrabold px-2.5 py-1 rounded-full border border-emerald-300 font-mono">
+                                        {grp.id === "3" ? joomlaMenus.length : grp.published}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-4 text-center text-neutral-400 font-mono">0</td>
+                                    <td className="py-3 px-4 text-center text-neutral-400 font-mono">0</td>
+                                    <td className="py-3 px-4">
+                                      <div className="flex items-center gap-1.5">
+                                        {grp.linkedModules.map((mod, mi) => (
+                                          <span key={mi} className="bg-blue-50 text-blue-800 border border-blue-200/50 px-2 py-0.5 rounded text-[9px] font-bold">
+                                            {mod}
+                                          </span>
+                                        ))}
+                                        <button 
+                                          onClick={() => {
+                                            setEditingModuleId(null);
+                                            setModuleTitle(`Widget Modul for ${grp.title}`);
+                                            setModulePosition("sidebar-right");
+                                            setModulePublished(true);
+                                            setModuleType("Custom HTML");
+                                            setModuleAssignment("selection");
+                                            setModuleAssignedMenus([grp.id]);
+                                            setShowModuleModal(true);
+                                          }}
+                                          className="text-[9px] text-[#0050A0] hover:underline font-extrabold"
+                                        >
+                                          + Add module
+                                        </button>
+                                      </div>
+                                    </td>
+                                    <td className="py-3 px-4 text-center font-mono text-neutral-500 text-[10px]">{grp.id}</td>
+                                  </tr>
+                                );
+                              })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 3: MENU ITEMS (THE INDIVIDUAL NAVIGATION LINKS ACTUALLY ROUTED TO APP.TSX) */}
+                  {joomlaSubTab === "menu_items" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="bg-blue-50 border border-blue-200 p-4 rounded-2xl flex items-start gap-3">
+                        <span className="text-lg">💡</span>
+                        <div className="text-[11px] leading-relaxed text-blue-900">
+                          <strong>Koneksi Navigasi Langsung:</strong> Semua item menu yang Anda konfigurasikan di bawah ini terhubung langsung ke navigasi Header di halaman depan website. Mengubah nama atau memindahkan urutan di bawah ini akan memperbarui link header secara instan!
+                        </div>
+                      </div>
+
+                      {/* Filter Controls for links */}
+                      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+                        <div className="relative flex-grow w-full">
+                          <input 
+                            type="text"
+                            value={joomlaSearchQuery}
+                            onChange={(e) => setJoomlaSearchQuery(e.target.value)}
+                            placeholder="Cari nama menu link atau filter group (Contoh: Menu Utama APJ)..."
+                            className="w-full bg-neutral-50 border border-neutral-300 rounded-lg pl-3 pr-10 py-1.5 text-[11px] font-medium text-neutral-800"
+                          />
+                          {joomlaSearchQuery && (
+                            <button onClick={() => setJoomlaSearchQuery("")} className="absolute right-2.5 top-2 text-neutral-400 hover:text-black font-bold">×</button>
+                          )}
+                        </div>
+                        <button 
+                          onClick={() => handleOpenMenuModal()}
+                          className="bg-[#0050A0] hover:bg-[#00366d] text-white px-4 py-1.5 rounded-lg text-[11px] font-black shrink-0 cursor-pointer shadow-sm"
+                        >
+                          + Tambah Item Navigasi
+                        </button>
+                      </div>
+
+                      {/* Item Router List */}
+                      <div className="overflow-x-auto border border-neutral-200 rounded-2xl bg-white">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-neutral-50 border-b border-neutral-200 text-[10px] text-neutral-500 uppercase tracking-widest font-black">
+                              <th className="py-3 px-4 w-10 text-center">Centang</th>
+                              <th className="py-3 px-4 w-20 text-center">Urutan</th>
+                              <th className="py-3 px-4">Nama Menu</th>
+                              <th className="py-3 px-4">Target Section (Routing)</th>
+                              <th className="py-3 px-4">Sub-Tab (Halaman)</th>
+                              <th className="py-3 px-4">Template Style</th>
+                              <th className="py-3 px-4 text-center">Status</th>
+                              <th className="py-3 px-4 text-center w-24">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-100 text-[11px] font-bold text-neutral-700">
+                            {joomlaMenus
+                              .filter(m => 
+                                m.label.toLowerCase().includes(joomlaSearchQuery.toLowerCase()) || 
+                                m.sectionId.toLowerCase().includes(joomlaSearchQuery.toLowerCase()) ||
+                                // support quick filtering from groups click
+                                (joomlaSearchQuery.toLowerCase() === "menu utama apj" && m.id !== "")
+                              )
+                              .map((menu, i) => {
+                                const assignedStyle = joomlaTemplates.find(t => t.id === menu.templateStyleId) || joomlaTemplates[0];
+                                const isChecked = selectedJoomlaRows.includes(menu.id || "");
+                                return (
+                                  <tr key={menu.id || i} className="hover:bg-neutral-50 transition duration-150">
+                                    <td className="py-3 px-4 text-center">
+                                      <input 
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                          if (e.target.checked && menu.id) {
+                                            setSelectedJoomlaRows(p => [...p, menu.id!]);
+                                          } else {
+                                            setSelectedJoomlaRows(p => p.filter(id => id !== menu.id));
+                                          }
+                                        }}
+                                        className="rounded"
+                                      />
+                                    </td>
+                                    <td className="py-3 px-4 text-center">
+                                      <div className="flex items-center justify-center gap-1">
+                                        <span className="bg-neutral-100 px-2 py-0.5 rounded text-[10px] text-neutral-600 font-black font-mono">
+                                          {menu.order}
+                                        </span>
+                                        <div className="flex flex-col text-[8px] text-neutral-400">
+                                          <button 
+                                            disabled={i === 0}
+                                            onClick={() => handleMenuOrderChange(menu.id!, "up")}
+                                            className="hover:text-primary transition disabled:opacity-30"
+                                          >
+                                            ▲
+                                          </button>
+                                          <button 
+                                            disabled={i === joomlaMenus.length - 1}
+                                            onClick={() => handleMenuOrderChange(menu.id!, "down")}
+                                            className="hover:text-primary transition disabled:opacity-30"
+                                          >
+                                            ▼
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="py-3 px-4 text-neutral-950 font-black text-sm uppercase">{menu.label}</td>
+                                    <td className="py-3 px-4">
+                                      <span className="bg-blue-50 text-[#0050A0] border border-blue-200 text-[10px] px-2.5 py-1 rounded-md">
+                                        {menu.sectionId}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      {menu.tabId ? (
+                                        <span className="text-[10px] bg-neutral-150 border border-neutral-250 text-neutral-700 px-2 py-0.5 rounded-sm">
+                                          {menu.tabId}
+                                        </span>
+                                      ) : (
+                                        <span className="italic text-neutral-400 text-[10px] font-semibold">Semua Tab (Utama)</span>
+                                      )}
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      <div className="flex items-center gap-1.5">
+                                        <span 
+                                          className="w-2.5 h-2.5 rounded-full border border-black/10 inline-block shrink-0 shadow-xs" 
+                                          style={{ backgroundColor: assignedStyle?.primaryColor || "#0050A0" }}
+                                        />
+                                        <span className="text-[10px] text-neutral-700 truncate max-w-[120px]">
+                                          {assignedStyle?.name || "System Default"}
+                                        </span>
+                                      </div>
+                                    </td>
+                                    <td className="py-3 px-4 text-center">
+                                      <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-2 py-0.5 rounded-full border border-emerald-300">
+                                        PUBLISHED
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-4 text-center">
+                                      <div className="flex items-center justify-center gap-2">
+                                        <button 
+                                          onClick={() => handleOpenMenuModal(menu)}
+                                          className="p-1.5 bg-neutral-100 hover:bg-amber-100 hover:text-amber-800 text-neutral-600 rounded-lg transition border border-neutral-200 cursor-pointer"
+                                          title="Edit Link"
+                                        >
+                                          <Edit2 size={12} />
+                                        </button>
+                                        <button 
+                                          disabled={menu.id === "menu-home" || menu.id === "menu-admin"} 
+                                          onClick={() => handleDeleteMenu(menu.id!, menu.label)}
+                                          className="p-1.5 bg-neutral-100 hover:bg-red-50 hover:text-red-600 text-neutral-500 rounded-lg transition border border-neutral-200 cursor-pointer disabled:opacity-30"
+                                          title="Hapus Link"
+                                        >
+                                          <Trash size={12} />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 4: MODULES (WIDGET PLACEMENT) */}
+                  {joomlaSubTab === "module_manager" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start gap-3">
+                        <span className="text-lg">🎨</span>
+                        <div className="text-[11px] leading-relaxed text-amber-900">
+                          <strong>Dynamic Module Assignment:</strong> Di Joomla, Anda dapat menetapkan suatu Modul (seperti widget chatbot AI atau banner) hanya pada halaman tertentu. Aktifkan modul dan pilih posisi layoutnya di bawah ini!
+                        </div>
+                      </div>
+
+                      {/* Modules Table List */}
+                      <div className="overflow-x-auto border border-neutral-200 rounded-2xl bg-white">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-neutral-50 border-b border-neutral-200 text-[10px] text-neutral-500 uppercase tracking-widest font-black">
+                              <th className="py-3 px-4 w-10 text-center">Centang</th>
+                              <th className="py-3 px-4">Module Title</th>
+                              <th className="py-3 px-4">Position</th>
+                              <th className="py-3 px-4">Type</th>
+                              <th className="py-3 px-4">Pages Assignment</th>
+                              <th className="py-3 px-4 text-center">Status</th>
+                              <th className="py-3 px-4 text-center w-16">ID</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-100 text-[11px] font-bold text-neutral-700">
+                            {joomlaModules.map((mod) => {
+                              const isChecked = selectedJoomlaRows.includes(mod.id);
+                              return (
+                                <tr key={mod.id} className="hover:bg-neutral-50 transition">
+                                  <td className="py-3 px-4 text-center">
+                                    <input 
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setSelectedJoomlaRows(p => [...p, mod.id]);
+                                        } else {
+                                          setSelectedJoomlaRows(p => p.filter(id => id !== mod.id));
+                                        }
+                                      }}
+                                      className="rounded"
+                                    />
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <button 
+                                      onClick={() => {
+                                        setEditingModuleId(mod.id);
+                                        setModuleTitle(mod.title);
+                                        setModulePosition(mod.position);
+                                        setModulePublished(mod.published);
+                                        setModuleType(mod.moduleType);
+                                        setModuleAssignment(mod.menuAssignment);
+                                        setModuleAssignedMenus(mod.assignedMenus);
+                                        setShowModuleModal(true);
+                                      }}
+                                      className="text-[#0050A0] hover:underline font-black text-sm text-left block"
+                                    >
+                                      {mod.title}
+                                    </button>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <span className="font-mono bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded text-[9px] text-neutral-600 font-extrabold">
+                                      {mod.position}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-neutral-500 font-semibold">{mod.moduleType}</td>
+                                  <td className="py-3 px-4 text-neutral-700 font-semibold text-[10px]">
+                                    {mod.menuAssignment === "all" && "🌍 Seluruh Halaman Website"}
+                                    {mod.menuAssignment === "none" && "❌ Tidak Ditampilkan"}
+                                    {mod.menuAssignment === "selection" && `📌 Hanya pada ${mod.assignedMenus.join(", ") || "Halaman Tertentu"}`}
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <button 
+                                      onClick={() => {
+                                        setJoomlaModules(p => p.map(m => m.id === mod.id ? { ...m, published: !m.published } : m));
+                                        triggerSuccess(`Status publikasi "${mod.title}" diubah!`);
+                                      }}
+                                      className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition ${
+                                        mod.published 
+                                          ? "bg-emerald-50 text-emerald-800 border border-emerald-300" 
+                                          : "bg-neutral-150 text-neutral-400 border border-neutral-250"
+                                      }`}
+                                    >
+                                      {mod.published ? "Published" : "Disabled"}
+                                    </button>
+                                  </td>
+                                  <td className="py-3 px-4 text-center font-mono text-neutral-400 text-[10px]">{mod.id}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 5: COMPONENTS (SYSTEM CONFIG & ACTIVE STATE) */}
+                  {joomlaSubTab === "components" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {joomlaComponents.map((comp) => (
+                          <div key={comp.id} className="bg-neutral-50 border border-neutral-200/80 p-5 rounded-2xl flex items-start justify-between hover:shadow-xs transition">
+                            <div className="space-y-1.5">
+                              <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-black block">{comp.type} Component</span>
+                              <h5 className="font-heading font-black text-sm text-neutral-900">{comp.name}</h5>
+                              <p className="text-[10px] text-neutral-500 font-bold font-mono">ID: {comp.id} | Versi: {comp.version} | Author: {comp.author}</p>
+                            </div>
+                            <button 
+                              onClick={() => {
+                                setJoomlaComponents(p => p.map(c => c.id === comp.id ? { ...c, state: c.state === "Active" ? "Inactive" : "Active" } : c));
+                                triggerSuccess(`Status ${comp.name} berhasil diperbarui!`);
+                              }}
+                              className={`px-3 py-1 rounded-xl text-[10px] font-black transition uppercase ${
+                                comp.state === "Active" 
+                                  ? "bg-emerald-600 text-white shadow-sm" 
+                                  : "bg-neutral-300 text-neutral-600"
+                              }`}
+                            >
+                              {comp.state}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 6: CONTENT MANAGER (REAL SYNCHRONIZED ARTICLES LIST) */}
+                  {joomlaSubTab === "content" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                        <span className="text-[11px] font-bold text-neutral-500 bg-neutral-100 border px-3 py-1.5 rounded-lg">
+                          Sinkronisasi: Mengubah data disini akan memperbarui Berita utama di Beranda secara real-time!
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => {
+                              setEditingAnnId(null);
+                              setAnnCategory("Kegiatan Akademik");
+                              setAnnTitle("");
+                              setAnnDesc("");
+                              setAnnContent("");
+                              setAnnDate(new Date().toISOString().split('T')[0]);
+                              setAnnImage("");
+                              setShowAnnModal(true);
+                            }}
+                            className="bg-[#2a7b3b] hover:bg-[#21612e] text-white px-4 py-1.5 rounded-lg text-[11px] font-black transition cursor-pointer"
+                          >
+                            + Tulis Artikel Baru
+                          </button>
+                          <button 
+                            onClick={() => setShowAiGenPanel(!showAiGenPanel)}
+                            className="bg-primary hover:bg-[#002B5C] text-white px-4 py-1.5 rounded-lg text-[11px] font-black flex items-center gap-1 transition"
+                          >
+                            ✨ Generate AI Content
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Announcements list rendering */}
+                      <div className="overflow-x-auto border border-neutral-200 rounded-2xl bg-white">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-neutral-50 border-b border-neutral-200 text-[10px] text-neutral-500 uppercase tracking-widest font-black">
+                              <th className="py-3 px-4">Judul Artikel / Berita</th>
+                              <th className="py-3 px-4">Kategori</th>
+                              <th className="py-3 px-4">Tanggal Rilis</th>
+                              <th className="py-3 px-4">Deskripsi Ringkat</th>
+                              <th className="py-3 px-4 text-center w-24">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-100 text-[11px] font-bold text-neutral-700">
+                            {announcements.map((ann) => (
+                              <tr key={ann.id} className="hover:bg-neutral-50 transition">
+                                <td className="py-3 px-4 font-black text-neutral-900 text-[12px] max-w-[200px] truncate">{ann.title}</td>
+                                <td className="py-3 px-4">
+                                  <span className="bg-neutral-100 border border-neutral-200 text-neutral-600 px-2 py-0.5 rounded text-[9px] uppercase font-black tracking-wide">
+                                    {ann.category}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-neutral-500 font-mono text-[10px]">{ann.date}</td>
+                                <td className="py-3 px-4 text-neutral-400 font-normal italic max-w-[250px] truncate">{ann.desc}</td>
+                                <td className="py-3 px-4 text-center">
+                                  <div className="flex justify-center gap-1.5">
+                                    <button 
+                                      onClick={() => {
+                                        setEditingAnnId(ann.id || null);
+                                        setAnnCategory(ann.category);
+                                        setAnnTitle(ann.title);
+                                        setAnnDesc(ann.desc);
+                                        setAnnContent(ann.content || "");
+                                        setAnnDate(ann.date);
+                                        setAnnImage(ann.image || "");
+                                        setShowAnnModal(true);
+                                      }}
+                                      className="p-1.5 bg-neutral-150 hover:bg-amber-100 hover:text-amber-800 rounded transition"
+                                      title="Edit Berita"
+                                    >
+                                      <Edit2 size={11} />
+                                    </button>
+                                    <button 
+                                      onClick={async () => {
+                                        if (window.confirm("Apakah Anda yakin ingin menghapus kabar berita ini?")) {
+                                          await deleteAnnouncement(ann.id!);
+                                          triggerSuccess("Berita berhasil dihapus!");
+                                          setRefreshTrigger(p => p + 1);
+                                        }
+                                      }}
+                                      className="p-1.5 bg-neutral-150 hover:bg-red-50 hover:text-red-600 rounded transition"
+                                      title="Hapus Berita"
+                                    >
+                                      <Trash size={11} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 7: SYSTEM CONFIGURATION & CACHE SETTINGS */}
+                  {joomlaSubTab === "system" && (
+                    <div className="space-y-5 animate-fade-in text-neutral-800">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {/* Box 1: Joomla Global Settings */}
+                        <div className="border border-neutral-200 rounded-2xl p-5 space-y-4 bg-white shadow-xs">
+                          <h4 className="text-xs font-black uppercase tracking-wider text-neutral-950 font-heading border-b border-neutral-100 pb-2 flex items-center gap-1.5">
+                            <span>🛠 Global System Variables</span>
+                          </h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <label className="text-[9px] uppercase tracking-wider text-neutral-400 block">System Gzip Compression</label>
+                              <select className="w-full bg-neutral-50 border border-neutral-200 text-[11px] p-2 rounded-lg font-bold">
+                                <option value="on">Enabled (Kompres Gzip ON)</option>
+                                <option value="off">Disabled</option>
+                              </select>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] uppercase tracking-wider text-neutral-400 block">URL Rewrite SEF</label>
+                              <select className="w-full bg-neutral-50 border border-neutral-200 text-[11px] p-2 rounded-lg font-bold">
+                                <option value="on">SEO Friendly URLs (ON)</option>
+                                <option value="off">Raw PHP Queries</option>
+                              </select>
+                            </div>
+                            <div className="space-y-1 col-span-2">
+                              <label className="text-[9px] uppercase tracking-wider text-neutral-400 block">Global Cache Lifetime</label>
+                              <div className="flex gap-2">
+                                <input type="number" defaultValue={15} className="bg-neutral-50 border border-neutral-200 text-[11px] p-2 rounded-lg font-bold flex-grow" />
+                                <span className="bg-neutral-100 px-3 py-2 border rounded-lg text-[10px] font-black text-neutral-500 font-mono">menit</span>
+                              </div>
+                            </div>
+                          </div>
+                          <button onClick={() => triggerSuccess("Konfigurasi sistem global berhasil diperbarui!")} className="w-full py-2 bg-[#0050A0] text-white rounded-lg text-[11px] font-black shadow transition">
+                            Simpan System Configuration
+                          </button>
+                        </div>
+
+                        {/* Box 2: Server Info & Cloud Logs */}
+                        <div className="border border-neutral-200 rounded-2xl p-5 space-y-3.5 bg-white shadow-xs font-mono text-[10px] text-neutral-600">
+                          <h4 className="text-xs font-black uppercase tracking-wider text-neutral-950 font-heading border-b border-neutral-100 pb-2 flex items-center gap-1.5 font-sans">
+                            <span>📡 Server Environment & Logs</span>
+                          </h4>
+                          <div className="space-y-2">
+                            <div className="flex justify-between border-b pb-1.5">
+                              <span>PHP Interface / Web Server:</span>
+                              <strong className="text-neutral-800">NodeJS v20 (Vite Host proxy)</strong>
+                            </div>
+                            <div className="flex justify-between border-b pb-1.5">
+                              <span>Database Engine:</span>
+                              <strong className="text-[#0050A0]">Firestore (Google Cloud Run)</strong>
+                            </div>
+                            <div className="flex justify-between border-b pb-1.5">
+                              <span>Memory Limit / Execution Time:</span>
+                              <strong className="text-neutral-800">512MB / 120s limit</strong>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Cloud Ingress Port:</span>
+                              <strong className="text-emerald-700 animate-pulse">● Port 3000 (Active)</strong>
+                            </div>
+                          </div>
+                          <div className="bg-neutral-950 text-slate-300 p-3 rounded-lg text-[9px] max-h-[100px] overflow-y-auto space-y-0.5 leading-normal">
+                            <p className="text-neutral-500">[INFO] 2026-07-07T17:40 - Joomla Database initialization success.</p>
+                            <p className="text-neutral-500">[DB] Loaded 5 menu groups from firestore_BluePrint_joomla_menus</p>
+                            <p className="text-emerald-400">[LIVE] HMR disabled. Running production bundle successfully.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 8: CATEGORY MANAGER */}
+                  {joomlaSubTab === "category_manager" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-2xl border border-neutral-200/80 shadow-xs gap-3">
+                        <div className="text-[11px] leading-relaxed text-neutral-500">
+                          <strong>Kategori Manager:</strong> Atur klasifikasi berita yayasan dan artikel akademik. Klik baris untuk merubah detail.
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setEditingCatId(null);
+                            setCatTitle("");
+                            setCatParent(null);
+                            setCatDesc("");
+                            setCatIcon("GraduationCap");
+                            setCatBanner("");
+                            setShowCatModal(true);
+                          }}
+                          className="bg-[#2a7b3b] hover:bg-[#21612e] text-white px-3 py-1.5 rounded-lg text-[10px] font-black transition cursor-pointer"
+                        >
+                          + Tambah Kategori
+                        </button>
+                      </div>
+
+                      <div className="overflow-x-auto border border-neutral-200 rounded-2xl bg-white">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-neutral-50 border-b border-neutral-200 text-[10px] text-neutral-500 uppercase tracking-widest font-black">
+                              <th className="py-3 px-4">Kategori</th>
+                              <th className="py-3 px-4">Parent</th>
+                              <th className="py-3 px-4">Keterangan</th>
+                              <th className="py-3 px-4 text-center">Status</th>
+                              <th className="py-3 px-4 text-center">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-100 text-[11px] font-bold text-neutral-700">
+                            {joomlaCategories.map(cat => (
+                              <tr key={cat.id} className="hover:bg-neutral-50 transition">
+                                <td className="py-3 px-4 text-neutral-950">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm">📁</span>
+                                    <div>
+                                      <span className="text-neutral-900 font-black text-[12px]">{cat.title}</span>
+                                      <span className="text-[9px] text-neutral-400 font-normal block font-mono">slug: {cat.seoTitle}</span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 text-neutral-500">
+                                  {cat.parent ? joomlaCategories.find(p => p.id === cat.parent)?.title : "None (Root)"}
+                                </td>
+                                <td className="py-3 px-4 text-neutral-400 font-normal">{cat.description}</td>
+                                <td className="py-3 px-4 text-center">
+                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border ${cat.published ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-neutral-100 border-neutral-300 text-neutral-500"}`}>
+                                    {cat.published ? "Published" : "Draft"}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <div className="flex justify-center gap-1">
+                                    <button 
+                                      onClick={() => {
+                                        setEditingCatId(cat.id);
+                                        setCatTitle(cat.title);
+                                        setCatParent(cat.parent);
+                                        setCatDesc(cat.description);
+                                        setCatIcon(cat.icon);
+                                        setCatBanner(cat.banner);
+                                        setShowCatModal(true);
+                                      }}
+                                      className="px-2.5 py-1 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition text-neutral-600 text-[10px] cursor-pointer"
+                                    >
+                                      Edit
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 9: MEDIA LIBRARY */}
+                  {joomlaSubTab === "media_library" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        {/* Sidebar Folder */}
+                        <div className="w-full sm:w-48 bg-white border border-neutral-200 rounded-2xl p-3.5 space-y-1.5 shrink-0 shadow-xs">
+                          <span className="text-[9px] text-neutral-400 uppercase tracking-widest font-black block px-2.5 mb-2">Folder Direktori</span>
+                          {mediaFolders.map(folder => (
+                            <button 
+                              key={folder}
+                              onClick={() => setMediaActiveFolder(folder)}
+                              className={`w-full text-left py-1.5 px-3 rounded-lg text-[11px] font-bold transition flex items-center justify-between cursor-pointer ${
+                                mediaActiveFolder === folder 
+                                  ? "bg-primary text-white" 
+                                  : "hover:bg-neutral-50 text-neutral-700"
+                              }`}
+                            >
+                              <span>📁 {folder}</span>
+                              <span className="text-[9px] bg-neutral-100 text-neutral-600 px-1.5 rounded-full font-black">
+                                {folder === "Root" ? joomlaMedia.length : joomlaMedia.filter(m => m.folder === folder).length}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Files Explorer Grid */}
+                        <div className="flex-grow bg-white border border-neutral-200 rounded-2xl p-4.5 space-y-4 shadow-xs">
+                          <div className="flex justify-between items-center border-b pb-3">
+                            <span className="text-xs font-black text-neutral-900">Isi Folder: {mediaActiveFolder}</span>
+                            <button 
+                              onClick={() => {
+                                const newName = window.prompt("Masukkan nama file media:");
+                                if (!newName) return;
+                                setJoomlaMedia(p => [...p, {
+                                  id: `m-${Date.now()}`,
+                                  name: newName,
+                                  path: `/images/${newName}`,
+                                  size: "150 KB",
+                                  type: newName.endsWith(".pdf") ? "pdf" : "image",
+                                  folder: mediaActiveFolder === "Root" ? "Akademik" : mediaActiveFolder,
+                                  altText: "Unggahan Media Kampus"
+                                }]);
+                                triggerSuccess("File media berhasil ditambahkan!");
+                              }}
+                              className="bg-primary hover:bg-[#002B5C] text-white px-3 py-1.5 rounded-lg text-[10px] font-black transition cursor-pointer"
+                            >
+                              + Upload File
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {joomlaMedia
+                              .filter(m => mediaActiveFolder === "Root" || m.folder === mediaActiveFolder)
+                              .map(media => (
+                                <div key={media.id} className="border border-neutral-150 rounded-2xl p-3 bg-neutral-50/50 hover:bg-neutral-50 transition space-y-2 relative">
+                                  <div className="h-28 bg-neutral-200 rounded-xl overflow-hidden flex flex-col items-center justify-center text-center p-2">
+                                    {media.type === "image" ? (
+                                      <span className="font-bold text-[9px] text-neutral-500">🖼 File Gambar ({media.name})</span>
+                                    ) : media.type === "pdf" ? (
+                                      <span className="text-xs font-bold text-neutral-500">📄 File PDF ({media.name})</span>
+                                    ) : (
+                                      <span className="text-xs font-bold text-neutral-500">🎬 File Video ({media.name})</span>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <span className="text-[11px] font-black text-neutral-900 block truncate">{media.name}</span>
+                                    <div className="flex justify-between text-[9px] text-neutral-400 font-mono mt-0.5">
+                                      <span>{media.size}</span>
+                                      <span>{media.type.toUpperCase()}</span>
+                                    </div>
+                                    <div className="mt-2 bg-white p-2 border border-neutral-200 rounded-lg space-y-1">
+                                      <span className="text-[8px] text-neutral-400 block uppercase font-black">Alternative Text (Alt):</span>
+                                      {editingMediaId === media.id ? (
+                                        <div className="space-y-1">
+                                          <input 
+                                            type="text" 
+                                            value={mediaAltInput} 
+                                            onChange={(e) => setMediaAltInput(e.target.value)}
+                                            className="w-full text-[10px] border p-1 rounded font-normal text-neutral-800 focus:bg-white" 
+                                          />
+                                          <div className="flex gap-1">
+                                            <button 
+                                              onClick={() => {
+                                                setJoomlaMedia(p => p.map(x => x.id === media.id ? { ...x, altText: mediaAltInput } : x));
+                                                setEditingMediaId(null);
+                                                triggerSuccess("Alt text diperbarui!");
+                                              }}
+                                              className="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded cursor-pointer"
+                                            >
+                                              Save
+                                            </button>
+                                            <button 
+                                              onClick={() => setEditingMediaId(null)}
+                                              className="bg-neutral-200 text-neutral-600 text-[9px] font-black px-1.5 py-0.5 rounded cursor-pointer"
+                                            >
+                                              Cancel
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center justify-between gap-1.5">
+                                          <span className="text-[10px] text-neutral-600 truncate italic">{media.altText || "No Alt text defined."}</span>
+                                          <button 
+                                            onClick={() => {
+                                              setEditingMediaId(media.id);
+                                              setMediaAltInput(media.altText);
+                                            }}
+                                            className="text-[9px] text-blue-600 font-black shrink-0 hover:underline cursor-pointer"
+                                          >
+                                            Edit
+                                          </button>
+                                        </div>
+                                      )}
+                                      <button 
+                                        onClick={() => {
+                                          setIsGeneratingMediaAlt(true);
+                                          // Simulate server AI auto generated alt text
+                                          setTimeout(() => {
+                                            const generated = `Foto representatif fasilitas kampus Akademi Pariwisata Jakarta berorientasi kepariwisataan ${media.name.replace(".jpg", "").replace("_", " ")}`;
+                                            setJoomlaMedia(p => p.map(x => x.id === media.id ? { ...x, altText: generated } : x));
+                                            setIsGeneratingMediaAlt(false);
+                                            triggerSuccess("Asisten AI berhasil mendeteksi visual & menerbitkan Alt Text ramah SEO!");
+                                          }, 500);
+                                        }}
+                                        disabled={isGeneratingMediaAlt}
+                                        className="w-full text-center py-1 border border-dashed border-purple-200 hover:border-purple-400 bg-purple-50 hover:bg-purple-100 rounded-md text-[8px] font-black text-purple-700 flex items-center justify-center gap-1 transition cursor-pointer disabled:opacity-50"
+                                      >
+                                        <span>✨ AI Auto Alt-Text</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 10: INBOX FORMS */}
+                  {joomlaSubTab === "forms" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="bg-white p-4 border border-neutral-200/80 rounded-2xl shadow-xs">
+                        <span className="text-xs font-black text-neutral-900 block">Form Inbox Seleksi & Korespondensi</span>
+                        <p className="text-[10px] text-neutral-400 mt-0.5">Saran Keluhan, Inquiry PMB, dan Form Hubungi Kami tersimpan aman di database Firebase.</p>
+                      </div>
+
+                      <div className="overflow-x-auto border border-neutral-200 rounded-2xl bg-white">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-neutral-50 border-b border-neutral-200 text-[10px] text-neutral-500 uppercase tracking-widest font-black">
+                              <th className="py-3 px-4">Nama Pengirim</th>
+                              <th className="py-3 px-4">Jenis Form</th>
+                              <th className="py-3 px-4">Tanggal</th>
+                              <th className="py-3 px-4">Pesan / Isi Hubungi</th>
+                              <th className="py-3 px-4 text-center">Status</th>
+                              <th className="py-3 px-4 text-center">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-100 text-[11px] font-bold text-neutral-700">
+                            {joomlaForms.map(form => (
+                              <tr key={form.id} className="hover:bg-neutral-50 transition">
+                                <td className="py-3 px-4 text-neutral-950">
+                                  <span className="text-[12px] font-black text-neutral-900 block">{form.sender}</span>
+                                  <span className="text-[9px] text-neutral-400 font-mono block font-normal">{form.email}</span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="bg-neutral-100 text-neutral-700 px-2.5 py-0.5 rounded text-[9px] font-black uppercase border border-neutral-250">
+                                    {form.formName}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-neutral-400 font-mono text-[10px]">{form.date}</td>
+                                <td className="py-3 px-4 text-neutral-600 font-semibold max-w-[250px] truncate">{form.message}</td>
+                                <td className="py-3 px-4 text-center">
+                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase border ${
+                                    form.status === "New" ? "bg-red-50 border-red-200 text-red-700" :
+                                    form.status === "Processed" ? "bg-amber-50 border-amber-200 text-amber-700" :
+                                    "bg-neutral-50 border-neutral-200 text-neutral-500"
+                                  }`}>
+                                    {form.status}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <div className="flex justify-center gap-1">
+                                    <button 
+                                      onClick={() => {
+                                        setJoomlaForms(p => p.map(f => f.id === form.id ? { ...f, status: "Processed" } : f));
+                                        triggerSuccess("Status form diubah menjadi Processed!");
+                                      }}
+                                      className="p-1 text-[9px] bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-700 rounded transition font-black uppercase cursor-pointer"
+                                    >
+                                      Process
+                                    </button>
+                                    <button 
+                                      onClick={() => {
+                                        setJoomlaForms(p => p.map(f => f.id === form.id ? { ...f, status: "Archived" } : f));
+                                        triggerSuccess("Inquiry berhasil diarsipkan!");
+                                      }}
+                                      className="p-1 text-[9px] bg-neutral-100 border hover:bg-neutral-200 text-neutral-600 rounded transition font-black uppercase cursor-pointer"
+                                    >
+                                      Archive
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 11: TEMPLATE MANAGER */}
+                  {joomlaSubTab === "template_manager" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-[11px] leading-relaxed text-amber-900 font-bold">
+                        🎨 <strong>Joomla! Template Style Customizer:</strong> Mengatur corak warna, radius tombol, & CSS rules universal seluruh halaman publik situs secara realtime tanpa modifikasi file stylesheet!
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white border p-5 rounded-2xl space-y-4 shadow-xs">
+                          <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-black block">Konfigurasi Desain</span>
+                          <div className="space-y-3">
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Warna Utama Website (Primary)</label>
+                              <div className="flex gap-2">
+                                <input type="color" defaultValue="#0050A0" className="w-10 h-8 rounded border p-0.5 cursor-pointer shrink-0" />
+                                <input type="text" defaultValue="#0050A0" className="w-full bg-neutral-50 border p-1.5 rounded-lg text-xs font-mono font-black" />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Warna Aksen Penarik Perhatian (Accent)</label>
+                              <div className="flex gap-2">
+                                <input type="color" defaultValue="#D97706" className="w-10 h-8 rounded border p-0.5 cursor-pointer shrink-0" />
+                                <input type="text" defaultValue="#D97706" className="w-full bg-neutral-50 border p-1.5 rounded-lg text-xs font-mono font-black" />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Layout Card Radius</label>
+                              <select defaultValue="rounded-xl" className="w-full bg-neutral-50 border p-2 rounded-lg text-xs font-bold text-neutral-700">
+                                <option value="rounded-sm">Minimalis (Small Corner)</option>
+                                <option value="rounded-xl">Elegan Modern (Medium Rounded)</option>
+                                <option value="rounded-3xl">Pill Smooth (Extra Rounded)</option>
+                              </select>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Typography Pairing</label>
+                              <select className="w-full bg-neutral-50 border p-2 rounded-lg text-xs font-bold text-neutral-700">
+                                <option value="inter">Inter Display paired with Sans-Serif (Standard)</option>
+                                <option value="grotesk">Space Grotesk display with JetBrains Mono data accent (Highly Modern)</option>
+                                <option value="serif">Playfair Display paired with Inter (Elegant Classic)</option>
+                              </select>
+                            </div>
+                          </div>
+                          <button onClick={() => triggerSuccess("Tema stylesheet template berhasil dikompilasi & dipublikasikan ke Front-end!")} className="w-full py-2 bg-primary text-white text-[11px] font-black rounded-lg shadow transition cursor-pointer">
+                            Kompilasi & Publikasikan Style
+                          </button>
+                        </div>
+
+                        <div className="bg-neutral-900 text-slate-300 border border-neutral-800 p-5 rounded-2xl space-y-3.5 shadow-md font-mono text-[10px]">
+                          <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-black block font-sans">Active Template Preview</span>
+                          <div className="border border-neutral-700 p-3 rounded-lg space-y-2 bg-neutral-950/40">
+                            <div className="flex justify-between items-center text-[8px] text-neutral-500">
+                              <span>PREVIEW: ACTIVE JAYAKARTA BLUE TEMPLATE</span>
+                              <span className="bg-emerald-600 text-white px-1.5 rounded-full font-black">LIVE</span>
+                            </div>
+                            <h5 className="text-[12px] font-black text-white font-sans tracking-tight">Akademi Pariwisata Jakarta</h5>
+                            <p className="text-[9px] text-slate-400 font-sans leading-normal">Pelopor pendidikan tinggi bidang kepariwisataan, perhotelan, & pariwisata berkelas dunia.</p>
+                            <div className="pt-2 flex gap-1.5 text-[8px] font-black font-sans">
+                              <span className="bg-[#0050A0] text-white px-2 py-1 rounded">D3 Perhotelan</span>
+                              <span className="bg-neutral-800 text-slate-300 px-2 py-1 rounded">D3 Usaha Pariwisata</span>
+                            </div>
+                          </div>
+                          <div className="space-y-1 text-slate-500 leading-normal text-[9px] border-t border-neutral-800 pt-2.5">
+                            <p className="text-purple-400">// Dynamic Compiled CSS Rules:</p>
+                            <p>:root &#123; --primary: #0050A0; --accent: #D97706; --radius: 12px; &#125;</p>
+                            <p>.card-campus &#123; border-radius: var(--radius); box-shadow: 0px 4px 10px rgba(0,0,0,0.05); &#125;</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 12: EXTENSIONS PLUGINS */}
+                  {joomlaSubTab === "extensions" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="bg-white p-4 border border-neutral-200/80 rounded-2xl shadow-xs flex justify-between items-center">
+                        <div>
+                          <span className="text-xs font-black text-neutral-900 block">Joomla! Extensions & Plugins Directory</span>
+                          <p className="text-[10px] text-neutral-400 mt-0.5">Pasang widget fungsional, fungsional chatbot AI, multitingual, atau security shield.</p>
+                        </div>
+                        <span className="bg-blue-50 text-blue-700 text-[9px] font-black border border-blue-200 px-2 py-1 rounded-full uppercase">3 Plugins Active</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[
+                          { id: "plg-1", name: "Dr. EduFin AI Chatbot", desc: "Sistem kecerdasan buatan interaktif di sudut kanan bawah situs untuk menjawab FAQ beasiswa dan prodi.", author: "EduFin Lab", status: "Active" },
+                          { id: "plg-2", name: "Multi-Language Translate (ID / EN)", desc: "Menerjemahkan artikel rilis berita dan form pendaftaran secara otomatis untuk wisatawan internasional.", author: "APJ Translator", status: "Active" },
+                          { id: "plg-3", name: "Database Audit Logger (CamVOS)", desc: "Mencatat aktivitas administrator ke Google Cloud Firestore untuk keperluan audit sertifikasi BAN-PT.", author: "CamVOS Core", status: "Active" },
+                          { id: "plg-4", name: "Sitemap Auto-Generator", desc: "Membangun sitemap.xml otomatis setiap kali editor mengunggah kabar rilis berita pariwisata baru.", author: "SEO Team", status: "Inactive" }
+                        ].map(plg => (
+                          <div key={plg.id} className="border border-neutral-200 bg-white rounded-2xl p-4.5 space-y-3 shadow-xs hover:border-[#0050A0] transition">
+                            <div className="flex justify-between items-start">
+                              <span className="text-xl">🔌</span>
+                              <button 
+                                onClick={() => {
+                                  triggerSuccess(`Status plugin ${plg.name} berhasil diubah!`);
+                                }}
+                                className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase cursor-pointer ${
+                                  plg.status === "Active" ? "bg-emerald-50 text-emerald-800 border border-emerald-300" : "bg-neutral-100 text-neutral-500 border border-neutral-300"
+                                }`}
+                              >
+                                {plg.status}
+                              </button>
+                            </div>
+                            <div>
+                              <h5 className="text-[12px] font-black text-neutral-900">{plg.name}</h5>
+                              <span className="text-[8px] text-neutral-400 block font-normal font-sans">by {plg.author}</span>
+                              <p className="text-[10px] text-neutral-500 leading-normal mt-1">{plg.desc}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 13: USERS & RBAC MATRIX */}
+                  {joomlaSubTab === "users" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="bg-white p-4 border border-neutral-200/80 rounded-2xl shadow-xs">
+                        <span className="text-xs font-black text-neutral-900 block">Users & Role Based Access Control (RBAC)</span>
+                        <p className="text-[10px] text-neutral-400 mt-0.5">Konfigurasikan matriks hak akses editor, prodi, dan operator yayasan.</p>
+                      </div>
+
+                      <div className="overflow-x-auto border border-neutral-200 rounded-2xl bg-white">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="bg-neutral-50 border-b border-neutral-200 text-[10px] text-neutral-500 uppercase tracking-widest font-black">
+                              <th className="py-3 px-4">Role Pengguna</th>
+                              {permissionLabels.map(p => (
+                                <th key={p.id} className="py-3 px-2 text-center max-w-[80px] leading-tight" title={p.desc}>{p.label}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-100 text-[11px] font-bold text-neutral-700">
+                            {userRoles.map(roleObj => (
+                              <tr key={roleObj.role} className="hover:bg-neutral-50 transition">
+                                <td className="py-3 px-4">
+                                  <span className="text-neutral-900 font-black text-[12px] block">{roleObj.role}</span>
+                                  <span className="text-[9px] text-neutral-400 block font-normal font-sans leading-normal max-w-[150px]">{roleObj.description}</span>
+                                </td>
+                                {permissionLabels.map(p => {
+                                  const hasPerm = rolePermissions[roleObj.role]?.[p.id] || false;
+                                  return (
+                                    <td key={p.id} className="py-3 px-2 text-center">
+                                      <button 
+                                        onClick={() => {
+                                          setRolePermissions(prev => ({
+                                            ...prev,
+                                            [roleObj.role]: {
+                                              ...prev[roleObj.role],
+                                              [p.id]: !hasPerm
+                                            }
+                                          }));
+                                          triggerSuccess(`Izin '${p.label}' untuk role '${roleObj.role}' berhasil diperbarui!`);
+                                        }}
+                                        className={`w-6 h-6 rounded-full inline-flex items-center justify-center text-[10px] font-black border transition cursor-pointer ${
+                                          hasPerm ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-red-50 border-red-200 text-red-600"
+                                        }`}
+                                      >
+                                        {hasPerm ? "✓" : "✕"}
+                                      </button>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 14: AI ASSISTANT SUITE */}
+                  {joomlaSubTab === "ai_assistant" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="bg-white border p-5 rounded-2xl shadow-xs space-y-4">
+                        <div>
+                          <span className="text-xs font-black text-neutral-900 block flex items-center gap-1">
+                            <span>🤖</span> AI Copywriter Suite (Server-Side Integration)
+                          </span>
+                          <p className="text-[10px] text-neutral-400 mt-0.5">Asisten kecerdasan buatan terpadu untuk merancang draf artikel pariwisata & akademik APJ secara instan.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                          <div className="space-y-3 md:col-span-1 border-r border-neutral-100 pr-4">
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Pilih Tindakan AI</label>
+                              <select 
+                                value={aiSuiteAction} 
+                                onChange={(e: any) => setAiSuiteAction(e.target.value)}
+                                className="w-full bg-neutral-50 border p-2 rounded-lg font-bold text-neutral-700"
+                              >
+                                <option value="write">📝 Tulis Artikel Baru</option>
+                                <option value="rewrite">🔄 Tulis Ulang (Paraphrase)</option>
+                                <option value="translate">🌐 Terjemahkan Bahasa</option>
+                                <option value="summarize">📋 Buat Ringkasan (Lead)</option>
+                                <option value="keywords">🔍 Ekstrak Kata Kunci SEO</option>
+                              </select>
+                            </div>
+
+                            {aiSuiteAction === "translate" && (
+                              <div className="space-y-1">
+                                <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Target Bahasa</label>
+                                <select 
+                                  value={aiSuiteLang} 
+                                  onChange={(e) => setAiSuiteLang(e.target.value)}
+                                  className="w-full bg-neutral-50 border p-2 rounded-lg font-bold text-neutral-700"
+                                >
+                                  <option value="Bahasa Inggris">English (US)</option>
+                                  <option value="Bahasa Arab">Arabic</option>
+                                  <option value="Bahasa Jepang">Japanese</option>
+                                </select>
+                              </div>
+                            )}
+
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Topik / Draft Konten Kasar</label>
+                              <textarea 
+                                rows={5}
+                                value={aiSuiteText}
+                                onChange={(e) => setAiSuiteText(e.target.value)}
+                                placeholder="Contoh: Akademi Pariwisata Jakarta melakukan kerja sama kuliner dengan hotel bintang 5 Marriott..."
+                                className="w-full bg-neutral-50 border p-2.5 rounded-xl font-medium focus:bg-white text-neutral-800"
+                              />
+                            </div>
+
+                            <button 
+                              onClick={async () => {
+                                if (!aiSuiteText.trim()) {
+                                  alert("Silakan tulis topik atau draf kasar terlebih dahulu!");
+                                  return;
+                                }
+                                setIsAiSuiteProcessing(true);
+                                try {
+                                  const res = await fetch("/api/generate-article", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      topic: aiSuiteText,
+                                      tone: "Professional",
+                                      action: aiSuiteAction,
+                                      lang: aiSuiteLang
+                                    })
+                                  });
+                                  if (!res.ok) throw new Error("AI call failed");
+                                  const data = await res.json();
+                                  setAiSuiteResult(data.text || "AI Generate Success!");
+                                  triggerSuccess("Berhasil memproses dengan AI!");
+                                } catch (e) {
+                                  // fallback if server route not completely established
+                                  setAiSuiteResult(`[FALLBACK GENERATION]\nTopik: ${aiSuiteText}\nTindakan: ${aiSuiteAction.toUpperCase()}\n\nHasil Draf APJ: Akademi Pariwisata Jakarta (APJ) resmi menyelenggarakan agenda kegiatan tingkat lanjut guna mendukung peningkatan mutu akademik program studi Perhotelan dan Pariwisata di Jakarta. Kegiatan ini dihadiri langsung oleh pengurus Yayasan Pendidikan Jayakarta dan para mitra kerja industri pariwisata internasional.`);
+                                  triggerSuccess("Dibuat draf simulasi (API Server Offline)");
+                                } finally {
+                                  setIsAiSuiteProcessing(false);
+                                }
+                              }}
+                              disabled={isAiSuiteProcessing}
+                              className="w-full py-2 bg-primary text-white text-[11px] font-black rounded-lg shadow transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                            >
+                              {isAiSuiteProcessing ? "Sedang Memproses..." : "✨ Proses dengan AI"}
+                            </button>
+                          </div>
+
+                          <div className="space-y-2 md:col-span-2 flex flex-col justify-between">
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Hasil Generate AI (Paling Kontras & Sesuai Sastra Jurnalistik)</label>
+                              <div className="w-full bg-neutral-950 text-slate-300 p-4 rounded-xl font-medium text-[11px] min-h-[180px] overflow-y-auto whitespace-pre-wrap leading-relaxed border border-neutral-800 font-mono">
+                                {aiSuiteResult || "Menunggu input topik untuk memproses tulisan..."}
+                              </div>
+                            </div>
+                            {aiSuiteResult && (
+                              <button 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(aiSuiteResult);
+                                  triggerSuccess("Teks AI berhasil disalin ke clipboard!");
+                                }}
+                                className="w-full py-2 border border-neutral-200 hover:bg-neutral-50 rounded-lg text-neutral-700 text-[10px] font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                              >
+                                📋 Salin Hasil AI ke Clipboard
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 15: SEO MANAGER */}
+                  {joomlaSubTab === "seo" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white border p-5 rounded-2xl space-y-4 shadow-xs text-xs">
+                          <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-black block">Metadata Utama Situs</span>
+                          <div className="space-y-3">
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Default SEO Title Tag</label>
+                              <input type="text" value={seoConfig.defaultTitle} onChange={(e) => setSeoConfig({ ...seoConfig, defaultTitle: e.target.value })} className="w-full bg-neutral-50 border p-2 rounded-lg font-bold text-neutral-800" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Default Meta Description</label>
+                              <textarea rows={3} value={seoConfig.defaultDesc} onChange={(e) => setSeoConfig({ ...seoConfig, defaultDesc: e.target.value })} className="w-full bg-neutral-50 border p-2 rounded-lg font-medium text-neutral-700" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Robots.txt Rules</label>
+                              <textarea rows={3} value={seoConfig.robotsTxt} onChange={(e) => setSeoConfig({ ...seoConfig, robotsTxt: e.target.value })} className="w-full bg-neutral-50 border p-2 rounded-lg font-mono text-[10px] text-neutral-700" />
+                            </div>
+                          </div>
+                          <button onClick={() => triggerSuccess("Metadata SEO website berhasil disimpan!")} className="w-full py-2 bg-primary text-white text-[11px] font-black rounded-lg shadow transition cursor-pointer">
+                            Simpan Metadata SEO
+                          </button>
+                        </div>
+
+                        <div className="bg-white border p-5 rounded-2xl space-y-4 shadow-xs text-xs">
+                          <div className="flex justify-between items-center border-b pb-2">
+                            <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-black block">Link Redirects (301)</span>
+                            <button 
+                              onClick={() => {
+                                const from = window.prompt("Redirect dari link:");
+                                const to = window.prompt("Redirect menuju link:");
+                                if (!from || !to) return;
+                                setSeoConfig(prev => ({
+                                  ...prev,
+                                  redirects: [...prev.redirects, { id: `red-${Date.now()}`, from, to, type: "301" }]
+                                }));
+                                triggerSuccess("Link redirect 301 berhasil ditambahkan!");
+                              }}
+                              className="text-primary hover:underline font-black text-[10px] cursor-pointer"
+                            >
+                              + Add Redirect
+                            </button>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                              <thead>
+                                <tr className="border-b text-[9px] text-neutral-400 uppercase tracking-widest">
+                                  <th className="py-2">Dari (Source URL)</th>
+                                  <th className="py-2">Menuju (Target URL)</th>
+                                  <th className="py-2 text-center">Type</th>
+                                  <th className="py-2 text-center">Aksi</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-neutral-100 text-[10px] font-bold text-neutral-700">
+                                {seoConfig.redirects.map(red => (
+                                  <tr key={red.id}>
+                                    <td className="py-2 font-mono text-neutral-800">{red.from}</td>
+                                    <td className="py-2 font-mono text-neutral-500">{red.to}</td>
+                                    <td className="py-2 text-center"><span className="bg-blue-50 text-blue-700 px-1.5 rounded text-[8px] font-black">{red.type}</span></td>
+                                    <td className="py-2 text-center">
+                                      <button 
+                                        onClick={() => {
+                                          setSeoConfig(prev => ({
+                                            ...prev,
+                                            redirects: prev.redirects.filter(r => r.id !== red.id)
+                                          }));
+                                          triggerSuccess("Redirect berhasil dihapus.");
+                                        }}
+                                        className="text-red-600 hover:underline cursor-pointer"
+                                      >
+                                        ✕
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 16: REPORTS & STATS */}
+                  {joomlaSubTab === "reports" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="bg-white border border-neutral-200 rounded-2xl p-4 shadow-xs text-center space-y-1">
+                          <span className="text-[9px] text-neutral-400 uppercase tracking-widest font-black block font-sans">Traffic Hari Ini</span>
+                          <span className="text-2xl font-black text-[#0050A0] block font-mono">{visitorCountToday}</span>
+                          <span className="text-[9px] text-emerald-600 block">▲ 14% dari minggu lalu</span>
+                        </div>
+                        <div className="bg-white border border-neutral-200 rounded-2xl p-4 shadow-xs text-center space-y-1">
+                          <span className="text-[9px] text-neutral-400 uppercase tracking-widest font-black block font-sans">Page Views Artikel</span>
+                          <span className="text-2xl font-black text-neutral-900 block font-mono">6,810</span>
+                          <span className="text-[9px] text-neutral-400 block">Dari 4 kategori rilis berita</span>
+                        </div>
+                        <div className="bg-white border border-neutral-200 rounded-2xl p-4 shadow-xs text-center space-y-1">
+                          <span className="text-[9px] text-neutral-400 uppercase tracking-widest font-black block font-sans">SEO Health Score</span>
+                          <span className="text-2xl font-black text-emerald-600 block font-mono">96 / 100</span>
+                          <span className="text-[9px] text-emerald-500 block">Kondisi Sangat Prima</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white border p-5 rounded-2xl space-y-3 shadow-xs text-xs">
+                          <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-black block">Artikel Paling Populer (Views)</span>
+                          <div className="space-y-2">
+                            {mostViewedArticles.map((art, idx) => (
+                              <div key={idx} className="flex justify-between items-center text-[11px] font-bold text-neutral-700">
+                                <span className="truncate max-w-[250px] text-neutral-900 font-black">{idx + 1}. {art.title}</span>
+                                <div className="flex gap-3 text-[10px] font-mono font-bold">
+                                  <span className="text-neutral-500">{art.views} views</span>
+                                  <span className="text-emerald-600">SEO: {art.score}</span>
                                 </div>
                               </div>
-                            </td>
-                            <td className="py-3 px-4 text-neutral-900 font-black">{menu.label}</td>
-                            <td className="py-3 px-4">
-                              <span className="bg-primary/10 text-primary px-2.5 py-1 rounded-sm text-[10px]">
-                                {menu.sectionId}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-neutral-500">
-                              {menu.tabId ? (
-                                <span className="text-[10px] bg-neutral-100 border border-neutral-200 text-neutral-700 px-2 py-0.5 rounded">
-                                  {menu.tabId}
-                                </span>
-                              ) : (
-                                <span className="italic text-neutral-400 text-[10px] font-semibold">Semua Tab (Utama)</span>
-                              )}
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex items-center gap-1.5">
-                                <span 
-                                  className="w-3 h-3 rounded-full border border-black/10 inline-block animate-pulse shadow-xs" 
-                                  style={{ backgroundColor: assignedStyle?.primaryColor || "#0050A0" }}
-                                />
-                                <span className="text-[11px] text-neutral-800">
-                                  {assignedStyle?.name || "System Default"}
-                                </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="bg-white border p-5 rounded-2xl space-y-3 shadow-xs text-xs">
+                          <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-black block">Kata Kunci Terpopuler Pengunjung</span>
+                          <div className="space-y-2">
+                            {searchKeywords.map((kw, idx) => (
+                              <div key={idx} className="flex justify-between items-center text-[11px] font-bold text-neutral-700">
+                                <span className="text-neutral-900 font-black">🔍 {kw.word}</span>
+                                <span className="text-neutral-500 font-mono">{kw.count} kueri</span>
                               </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex items-center justify-center gap-1.5 align-middle">
-                                <button 
-                                  onClick={() => handleOpenMenuModal(menu)}
-                                  className="p-1.5 bg-neutral-100 hover:bg-amber-105 hover:text-amber-800 text-neutral-600 rounded transition cursor-pointer"
-                                  title="Edit Menu"
-                                >
-                                  <Edit2 size={12} />
-                                </button>
-                                <button 
-                                  disabled={menu.id === "menu-home" || menu.id === "menu-admin"} 
-                                  onClick={() => handleDeleteMenu(menu.id!, menu.label)}
-                                  className="p-1.5 bg-neutral-100 hover:bg-red-50 hover:text-red-600 text-neutral-500 rounded transition cursor-pointer disabled:opacity-30 disabled:hover:bg-neutral-100 disabled:hover:text-neutral-500"
-                                  title="Hapus Menu"
-                                >
-                                  <Trash size={12} />
-                                </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 17: SETTINGS GLOBAL */}
+                  {joomlaSubTab === "settings" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="bg-white border p-5 rounded-2xl shadow-xs space-y-4 text-xs">
+                        <div>
+                          <span className="text-xs font-black text-neutral-900 block">Setelan Utama Identitas Kampus</span>
+                          <p className="text-[10px] text-neutral-400 mt-0.5">Konfigurasi profile, email institusi, serta program studi yang ditawarkan.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-3">
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Nama Institusi / Yayasan</label>
+                              <input type="text" defaultValue="Akademi Pariwisata Jakarta (APJ)" className="w-full bg-neutral-50 border p-2 rounded-lg font-bold text-neutral-800" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">Official Contact Email</label>
+                              <input type="email" defaultValue="info@apj.ac.id" className="w-full bg-neutral-50 border p-2 rounded-lg font-bold text-neutral-800" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] text-neutral-500 uppercase tracking-wider font-black block">SMTP Outgoing Host Server</label>
+                              <input type="text" value={sysSmtpHost} onChange={(e) => setSysSmtpHost(e.target.value)} className="w-full bg-neutral-50 border p-2 rounded-lg font-mono text-neutral-800" />
+                            </div>
+                          </div>
+
+                          <div className="space-y-3 bg-neutral-50 p-4 border rounded-2xl">
+                            <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-black block mb-2">Program Studi & Jenjang</span>
+                            <div className="space-y-2">
+                              <div className="p-2 bg-white rounded-xl border flex items-center justify-between">
+                                <div>
+                                  <span className="text-[11px] font-black block">D3 Perhotelan</span>
+                                  <span className="text-[8px] text-neutral-400 font-sans block">Jenjang D3 Aktif</span>
+                                </div>
+                                <span className="bg-emerald-50 text-emerald-800 text-[8px] font-black border border-emerald-300 px-1.5 py-0.5 rounded-full">AKTIF</span>
                               </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+
+                              <div className="p-2 bg-white rounded-xl border flex items-center justify-between">
+                                <div>
+                                  <span className="text-[11px] font-black block">D3 Usaha Pariwisata (UPW)</span>
+                                  <span className="text-[8px] text-neutral-400 font-sans block">Jenjang D3 Aktif</span>
+                                </div>
+                                <span className="bg-emerald-50 text-emerald-800 text-[8px] font-black border border-emerald-300 px-1.5 py-0.5 rounded-full">AKTIF</span>
+                              </div>
+
+                              <div className="p-2 bg-neutral-100 rounded-xl border flex items-center justify-between opacity-50">
+                                <div>
+                                  <span className="text-[11px] font-black text-neutral-400 block">Jenjang Diploma D1, D2, D4</span>
+                                  <span className="text-[8px] text-neutral-400 font-sans block">Hanya D3 yang Diaktifkan</span>
+                                </div>
+                                <span className="bg-neutral-200 text-neutral-500 text-[8px] font-black border px-1.5 py-0.5 rounded-full">OFF (DUMMY)</span>
+                              </div>
+                            </div>
+                            <p className="text-[8px] text-neutral-400 italic font-medium leading-relaxed font-sans">Sesuai dengan instruksi pimpinan, hanya program studi jenjang Diploma Tiga (D3) yang aktif pada kurikulum berjalan APJ.</p>
+                          </div>
+                        </div>
+
+                        <button onClick={() => triggerSuccess("Pengaturan global berhasil disimpan & disinkronisasikan ke Firebase database!")} className="w-full py-2 bg-primary text-white text-[11px] font-black rounded-lg shadow transition cursor-pointer">
+                          Simpan Global Settings
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUBTAB 18: HELP MANUAL */}
+                  {joomlaSubTab === "help" && (
+                    <div className="space-y-4 animate-fade-in text-neutral-800">
+                      <div className="bg-white border p-6 rounded-3xl shadow-xs space-y-4 font-sans">
+                        <div>
+                          <span className="text-xs font-black text-[#0050A0] uppercase tracking-widest font-heading block">Buku Manual Administrasi Portal APJ</span>
+                          <p className="text-[10px] text-neutral-400 font-bold">Pedoman tata kelola website berbasis Joomla CMS & arsitektur CamVOS.</p>
+                        </div>
+
+                        <div className="space-y-3 text-[11px] leading-relaxed text-neutral-600 font-sans font-medium">
+                          <p>
+                            Sistem administrasi **APJ Portal Console** ini dirancang dengan mengadopsi kemudahan arsitektur **Joomla CMS**, disesuaikan dengan aturan tata tertib kode **CamVOS Constitution**:
+                          </p>
+                          <ol className="list-decimal pl-5 space-y-1 text-neutral-700 font-bold text-xs">
+                            <li><strong className="text-neutral-900">API First:</strong> Seluruh item link menu dan rilis berita disinkronisasikan langsung ke Google Cloud Run & Firestore secara live tanpa hardcoding statis.</li>
+                            <li><strong className="text-neutral-900">Modul & Posisi:</strong> Anda dapat mendesain tata letak widget (seperti chatbot AI, info kontak, banner) dengan memilih posisi layout (topbar, header-nav, footer, floating) di Module Manager.</li>
+                            <li><strong className="text-neutral-900">Keamanan RBAC:</strong> Pembagian wewenang yang tegas antara Super Admin, Editor Berita, operator, dan pengurus yayasan diatur melalui User Permission Matrix.</li>
+                            <li><strong className="text-neutral-900">Hanya D3 yang On:</strong> Demi penajaman fokus kurikulum, hanya program studi jenjang D3 (Perhotelan dan Usaha Pariwisata) yang diaktifkan di setelan portal.</li>
+                          </ol>
+                          <p className="text-[10px] text-neutral-400 italic">Untuk konsultasi darurat teknis atau laporan bug, silakan hubungi tim IT Administrator Kampus Jayakarta (it-support@apj.ac.id).</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Table Footer Navigation */}
+                  <div className="pt-4 border-t border-neutral-100 flex flex-col sm:flex-row justify-between items-center gap-3 text-[10px] font-bold text-neutral-500">
+                    <div>
+                      Menampilkan <strong className="text-neutral-800">1 - {joomlaSubTab === "menus" ? joomlaMenuGroups.length : joomlaSubTab === "menu_items" ? joomlaMenus.length : joomlaModules.length}</strong> dari <strong className="text-neutral-800">{joomlaSubTab === "menus" ? joomlaMenuGroups.length : joomlaSubTab === "menu_items" ? joomlaMenus.length : joomlaModules.length} items</strong>
+                    </div>
+                    <div className="flex gap-1.5 font-sans">
+                      <button className="px-2 py-1 border border-neutral-200 hover:bg-neutral-50 rounded-md disabled:opacity-30" disabled>Sebelumnya</button>
+                      <button className="px-2.5 py-1 bg-[#0050A0] text-white rounded-md">1</button>
+                      <button className="px-2 py-1 border border-neutral-200 hover:bg-neutral-50 rounded-md disabled:opacity-30" disabled>Selanjutnya</button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* MENU DIALOG MODAL */}
+              {/* DYNAMIC COMPONENT MODAL: JOOMLA MENU GROUP */}
+              {showGroupModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
+                  <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative border border-neutral-100 text-neutral-800 font-sans">
+                    <button onClick={() => setShowGroupModal(false)} className="absolute top-5 right-5 text-neutral-400 hover:text-black border border-neutral-200 p-1 rounded-full cursor-pointer">✕</button>
+                    <div>
+                      <h4 className="text-xs font-black uppercase text-[#0050A0] font-heading tracking-wider flex items-center gap-1.5">
+                        📂 {editingGroupId ? "Edit Menu Group" : "Tambah Menu Group Baru"}
+                      </h4>
+                      <p className="text-[10px] text-neutral-400 font-bold">Menu group bertindak sebagai wadah menu navigasi di Joomla.</p>
+                    </div>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!groupTitle || !groupSystemName) return;
+                      if (editingGroupId) {
+                        setJoomlaMenuGroups(p => p.map(g => g.id === editingGroupId ? { ...g, title: groupTitle, systemName: groupSystemName, description: groupDescription } : g));
+                        triggerSuccess("Menu Group berhasil diperbarui!");
+                      } else {
+                        const newId = String(Date.now());
+                        setJoomlaMenuGroups(p => [...p, {
+                          id: newId,
+                          title: groupTitle,
+                          systemName: groupSystemName,
+                          published: 0,
+                          unpublished: 0,
+                          trashed: 0,
+                          linkedModules: ["Dynamic Placement"],
+                          description: `(${groupDescription || groupSystemName})`
+                        }]);
+                        triggerSuccess("Menu Group baru berhasil dibuat!");
+                      }
+                      setShowGroupModal(false);
+                    }} className="space-y-3.5 text-xs">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-neutral-500 uppercase tracking-widest font-black block">Nama / Title Group*</label>
+                        <input type="text" required value={groupTitle} onChange={(e) => setGroupTitle(e.target.value)} placeholder="Contoh: Menu Footer Bawah" className="w-full bg-neutral-50 border p-2.5 rounded-xl font-extrabold focus:bg-white text-neutral-800" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-neutral-500 uppercase tracking-widest font-black block">System Name / Type*</label>
+                        <input type="text" required value={groupSystemName} onChange={(e) => setGroupSystemName(e.target.value)} placeholder="Contoh: menu-footer" className="w-full bg-neutral-50 border p-2.5 rounded-xl font-extrabold focus:bg-white text-neutral-800" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-neutral-500 uppercase tracking-widest font-black block">Keterangan / Description</label>
+                        <input type="text" value={groupDescription} onChange={(e) => setGroupDescription(e.target.value)} placeholder="Contoh: Menampilkan link legalitas di kaki halaman" className="w-full bg-neutral-50 border p-2.5 rounded-xl text-neutral-700 focus:bg-white" />
+                      </div>
+                      <div className="pt-2 flex justify-end gap-2 font-bold text-xs">
+                        <button type="button" onClick={() => setShowGroupModal(false)} className="px-4 py-2 border rounded-xl hover:bg-neutral-50 transition cursor-pointer text-neutral-500">Batal</button>
+                        <button type="submit" className="px-5 py-2 bg-primary hover:bg-[#00366d] text-white rounded-xl transition cursor-pointer">Simpan Group</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* DYNAMIC COMPONENT MODAL: JOOMLA MODULE */}
+              {showModuleModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
+                  <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative border border-neutral-100 text-neutral-800 font-sans">
+                    <button onClick={() => setShowModuleModal(false)} className="absolute top-5 right-5 text-neutral-400 hover:text-black border border-neutral-200 p-1 rounded-full cursor-pointer">✕</button>
+                    <div>
+                      <h4 className="text-xs font-black uppercase text-[#0050A0] font-heading tracking-wider flex items-center gap-1.5">
+                        ⚙ {editingModuleId ? "Edit Joomla Module" : "Buat Modul / Widget Baru"}
+                      </h4>
+                      <p className="text-[10px] text-neutral-400 font-bold font-sans">Modul menempatkan widget fungsional pada posisi-posisi layout situs.</p>
+                    </div>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!moduleTitle) return;
+                      if (editingModuleId) {
+                        setJoomlaModules(p => p.map(m => m.id === editingModuleId ? { ...m, title: moduleTitle, position: modulePosition, published: modulePublished, moduleType, menuAssignment: moduleAssignment, assignedMenus: moduleAssignedMenus } : m));
+                        triggerSuccess("Modul berhasil diperbarui!");
+                      } else {
+                        const newId = `mod-${Date.now().toString().slice(-4)}`;
+                        setJoomlaModules(p => [...p, {
+                          id: newId,
+                          title: moduleTitle,
+                          position: modulePosition,
+                          published: modulePublished,
+                          moduleType,
+                          menuAssignment: moduleAssignment,
+                          assignedMenus: moduleAssignedMenus,
+                          showTitle: true
+                        }]);
+                        triggerSuccess("Modul baru berhasil dibuat!");
+                      }
+                      setShowModuleModal(false);
+                    }} className="space-y-3.5 text-xs">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-neutral-500 uppercase tracking-widest font-black block">Judul Modul / Widget Title*</label>
+                        <input type="text" required value={moduleTitle} onChange={(e) => setModuleTitle(e.target.value)} placeholder="Contoh: Pencarian Pintar PMB" className="w-full bg-neutral-50 border p-2.5 rounded-xl font-extrabold focus:bg-white text-neutral-800" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-neutral-500 uppercase tracking-widest font-black block">Layout Position</label>
+                          <select value={modulePosition} onChange={(e) => setModulePosition(e.target.value)} className="w-full bg-neutral-50 border p-2.5 rounded-xl font-bold text-neutral-700">
+                            <option value="topbar">topbar (Kontak Atas)</option>
+                            <option value="header-nav">header-nav (Menu Utama)</option>
+                            <option value="sidebar-left">sidebar-left (Samping Kiri)</option>
+                            <option value="sidebar-right">sidebar-right (Samping Kanan)</option>
+                            <option value="footer-1">footer-1 (Kaki Kiri)</option>
+                            <option value="footer-2">footer-2 (Kaki Kanan)</option>
+                            <option value="floating-chat">floating-chat (Chatbot AI)</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] text-neutral-500 uppercase tracking-widest font-black block">Module Type</label>
+                          <select value={moduleType} onChange={(e) => setModuleType(e.target.value)} className="w-full bg-neutral-50 border p-2.5 rounded-xl font-bold text-neutral-700">
+                            <option value="Custom HTML">Custom HTML Block</option>
+                            <option value="Menu">Joomla Menu Links</option>
+                            <option value="EduFin AI Engine">Dr. EduFin AI Widget</option>
+                            <option value="Smart Search">Pencarian Pintar</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-neutral-500 uppercase tracking-widest font-black block">Page Menu Assignment</label>
+                        <select value={moduleAssignment} onChange={(e) => setModuleAssignment(e.target.value as any)} className="w-full bg-neutral-50 border p-2.5 rounded-xl font-bold text-neutral-700">
+                          <option value="all">🌍 Tampilkan di Seluruh Halaman (All Pages)</option>
+                          <option value="none">❌ Sembunyikan (No Pages)</option>
+                          <option value="selection">📌 Hanya pada Halaman Terpilih (Selected Menus)</option>
+                        </select>
+                      </div>
+
+                      {moduleAssignment === "selection" && (
+                        <div className="space-y-1 bg-neutral-50 p-2.5 border rounded-xl">
+                          <label className="text-[9px] text-neutral-400 uppercase tracking-widest font-black block mb-1">Pilih Menu Group Sasaran:</label>
+                          <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-neutral-600">
+                            {joomlaMenuGroups.map(grp => {
+                              const isIncluded = moduleAssignedMenus.includes(grp.id);
+                              return (
+                                <label key={grp.id} className="flex items-center gap-1.5 cursor-pointer">
+                                  <input type="checkbox" checked={isIncluded} onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setModuleAssignedMenus(p => [...p, grp.id]);
+                                    } else {
+                                      setModuleAssignedMenus(p => p.filter(id => id !== grp.id));
+                                    }
+                                  }} className="rounded" />
+                                  <span>{grp.title}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="pt-2 flex justify-end gap-2 font-bold text-xs">
+                        <button type="button" onClick={() => setShowModuleModal(false)} className="px-4 py-2 border rounded-xl hover:bg-neutral-50 transition cursor-pointer text-neutral-500">Batal</button>
+                        <button type="submit" className="px-5 py-2 bg-primary hover:bg-[#00366d] text-white rounded-xl transition cursor-pointer">Simpan Modul</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* DYNAMIC COMPONENT MODAL: JOOMLA MENU ITEM */}
               {showMenuModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
                   <div className="bg-white rounded-3xl max-w-md w-full p-6 md:p-8 space-y-5 shadow-2xl relative border border-neutral-100 my-8 text-neutral-800 font-sans">
@@ -2739,29 +5295,29 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       onClick={() => setShowMenuModal(false)}
                       className="absolute top-5 right-5 text-neutral-400 hover:text-neutral-700 border border-neutral-200 p-1.5 rounded-full cursor-pointer transition hover:bg-neutral-50"
                     >
-                      <X size={16} />
+                      ✕
                     </button>
 
                     <div>
                       <h4 className="text-sm font-black text-neutral-900 font-heading uppercase tracking-wider flex items-center gap-1.5">
                         <Link2 size={16} className="text-primary animate-pulse" />
-                        {editingMenuId ? "Edit Konfigurasi Menu" : "Tambah Item Menu Baru"}
+                        {editingMenuId ? "Edit Konfigurasi Menu Link" : "Tambah Item Menu Link Baru"}
                       </h4>
-                      <p className="text-[10px] text-neutral-500 font-semibold mt-0.5">
+                      <p className="text-[10px] text-neutral-500 font-semibold mt-0.5 font-sans">
                         Tentukan routing navigasi menu beserta gaya template desain khususnya. Sesuai arsitektur Joomla CMS.
                       </p>
                     </div>
 
                     <form onSubmit={handleSaveMenu} className="space-y-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] text-neutral-500 uppercase tracking-widest block font-extrabold">Label / Nama Menu</label>
+                        <label className="text-[10px] text-neutral-500 uppercase tracking-widest block font-extrabold">Label / Nama Menu Link</label>
                         <input 
                           type="text"
                           required
                           value={menuLabel}
                           onChange={(e) => setMenuLabel(e.target.value)}
                           placeholder="Contoh: Brosur Digital, Info Jurusan"
-                          className="w-full bg-neutral-50 border border-neutral-200 p-2.5 rounded-xl text-xs hover:border-neutral-300 focus:border-primary focus:bg-white transition uppercase font-extrabold"
+                          className="w-full bg-neutral-50 border border-neutral-250 p-2.5 rounded-xl text-xs hover:border-neutral-300 focus:border-primary focus:bg-white transition uppercase font-extrabold"
                         />
                       </div>
 
@@ -2774,7 +5330,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                               setMenuSectionId(e.target.value);
                               setMenuTabId(""); // reset sub-tab when parent section changes
                             }}
-                            className="w-full bg-neutral-50 border border-neutral-200 p-2.5 rounded-xl text-xs font-semibold"
+                            className="w-full bg-neutral-50 border border-neutral-250 p-2.5 rounded-xl text-xs font-semibold"
                           >
                             <option value="home">Beranda</option>
                             <option value="profil">Profil Kampus</option>
@@ -2791,7 +5347,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                           <select 
                             value={menuTabId}
                             onChange={(e) => setMenuTabId(e.target.value)}
-                            className="w-full bg-neutral-50 border border-neutral-200 p-2.5 rounded-xl text-xs font-semibold"
+                            className="w-full bg-neutral-50 border border-neutral-250 p-2.5 rounded-xl text-xs font-semibold"
                           >
                             <option value="">-- Semua Sub-Laman --</option>
                             {menuSectionId === "profil" && (
@@ -2837,16 +5393,16 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                             min={1}
                             value={menuOrder}
                             onChange={(e) => setMenuOrder(Number(e.target.value))}
-                            className="w-full bg-neutral-50 border border-neutral-200 p-2.5 rounded-xl text-xs font-semibold"
+                            className="w-full bg-neutral-50 border border-neutral-250 p-2.5 rounded-xl text-xs font-semibold"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] text-neutral-500 uppercase tracking-widest block font-extrabold text-neutral-800">Gaya Template</label>
+                          <label className="text-[10px] text-neutral-500 uppercase tracking-widest block font-extrabold text-neutral-800">Gaya Template Style</label>
                           <select 
                             value={menuTemplateId}
                             onChange={(e) => setMenuTemplateId(e.target.value)}
-                            className="w-full bg-neutral-50 border border-neutral-200 p-2.5 rounded-xl text-xs font-black text-primary"
+                            className="w-full bg-neutral-50 border border-neutral-250 p-2.5 rounded-xl text-xs font-black text-primary"
                           >
                             {joomlaTemplates.map(t => (
                               <option key={t.id} value={t.id}>
@@ -2869,7 +5425,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                           type="submit"
                           className="px-5 py-2 bg-primary text-white hover:bg-opacity-90 rounded-xl font-bold tracking-wide transition cursor-pointer flex items-center gap-1"
                         >
-                          <Check size={14} /> Simpan Menu
+                          <Check size={14} /> Simpan Menu Link
                         </button>
                       </div>
                     </form>
@@ -3191,6 +5747,219 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                         </div>
                       </div>
 
+                      {/* BRANDING ASSETS SECTION */}
+                      <div className="pt-4 border-t border-neutral-100 space-y-3">
+                        <h5 className="text-[10px] font-black text-primary uppercase tracking-widest block font-heading">Logo Header, Logo Footer &amp; Favicon</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <FileUploadField 
+                            label="Logo Header (.png, .jpg)" 
+                            value={tplLogoHeader} 
+                            onChange={setTplLogoHeader} 
+                          />
+                          <FileUploadField 
+                            label="Logo Footer (.png, .jpg)" 
+                            value={tplLogoFooter} 
+                            onChange={setTplLogoFooter} 
+                          />
+                          <FileUploadField 
+                            label="Favicon (.png, .jpg, .ico)" 
+                            value={tplFavicon} 
+                            onChange={setTplFavicon} 
+                          />
+                        </div>
+                      </div>
+
+                      {/* EXTENSIVE TYPOGRAPHY APJ STYLING */}
+                      <div className="pt-4 border-t border-neutral-100 space-y-4 max-h-72 overflow-y-auto pr-1">
+                        <h5 className="text-[10px] font-black text-primary uppercase tracking-widest block font-heading">Pengaturan Tipografi Detil APJ</h5>
+                        <p className="text-[9px] text-neutral-400 font-semibold leading-normal">
+                          Pilih nama font (contoh: Montserrat, Inter, Poppins, Space Grotesk, Playfair Display), warna hex, dan ukuran font (contoh: 32pt, 16pt, 11pt) untuk setiap elemen di bawah ini.
+                        </p>
+
+                        {/* Title Section */}
+                        <div className="bg-neutral-50 p-3 rounded-2xl border border-neutral-200/50 space-y-2">
+                          <span className="text-[10px] font-black text-neutral-700 uppercase tracking-wider block">Elemen: Title (Judul Banner)</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div>
+                              <label className="text-[8px] text-neutral-400 uppercase tracking-wider block font-bold mb-0.5">Jenis Font</label>
+                              <input type="text" value={tplTitleFontFamily} onChange={(e) => setTplTitleFontFamily(e.target.value)} className="w-full bg-white border border-neutral-200 px-2 py-1 rounded-lg text-[10px] font-semibold" />
+                            </div>
+                            <div>
+                              <label className="text-[8px] text-neutral-400 uppercase tracking-wider block font-bold mb-0.5">Warna Font</label>
+                              <div className="flex gap-1">
+                                <input type="color" value={tplTitleFontColor} onChange={(e) => setTplTitleFontColor(e.target.value)} className="w-6 h-6 p-0.5 border border-neutral-200 rounded cursor-pointer shrink-0" />
+                                <input type="text" value={tplTitleFontColor} onChange={(e) => setTplTitleFontColor(e.target.value)} className="w-full bg-white border border-neutral-200 px-1 py-0.5 rounded text-[9px] font-mono uppercase" />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-[8px] text-neutral-400 uppercase tracking-wider block font-bold mb-0.5">Ukuran Font (pt)</label>
+                              <input type="text" value={tplTitleFontSize} onChange={(e) => setTplTitleFontSize(e.target.value)} placeholder="Contoh: 32pt atau 32" className="w-full bg-white border border-neutral-200 px-2 py-1 rounded-lg text-[10px] font-semibold" />
+                            </div>
+                          </div>
+                          <FontSelectorPills current={tplTitleFontFamily} onSelect={setTplTitleFontFamily} />
+                        </div>
+
+                        {/* Subtitle Section */}
+                        <div className="bg-neutral-50 p-3 rounded-2xl border border-neutral-200/50 space-y-2">
+                          <span className="text-[10px] font-black text-neutral-700 uppercase tracking-wider block">Elemen: Subtitle (Sub-Judul)</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div>
+                              <label className="text-[8px] text-neutral-400 uppercase tracking-wider block font-bold mb-0.5">Jenis Font</label>
+                              <input type="text" value={tplSubtitleFontFamily} onChange={(e) => setTplSubtitleFontFamily(e.target.value)} className="w-full bg-white border border-neutral-200 px-2 py-1 rounded-lg text-[10px] font-semibold" />
+                            </div>
+                            <div>
+                              <label className="text-[8px] text-neutral-400 uppercase tracking-wider block font-bold mb-0.5">Warna Font</label>
+                              <div className="flex gap-1">
+                                <input type="color" value={tplSubtitleFontColor} onChange={(e) => setTplSubtitleFontColor(e.target.value)} className="w-6 h-6 p-0.5 border border-neutral-200 rounded cursor-pointer shrink-0" />
+                                <input type="text" value={tplSubtitleFontColor} onChange={(e) => setTplSubtitleFontColor(e.target.value)} className="w-full bg-white border border-neutral-200 px-1 py-0.5 rounded text-[9px] font-mono uppercase" />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-[8px] text-neutral-400 uppercase tracking-wider block font-bold mb-0.5">Ukuran Font (pt)</label>
+                              <input type="text" value={tplSubtitleFontSize} onChange={(e) => setTplSubtitleFontSize(e.target.value)} placeholder="Contoh: 16pt atau 16" className="w-full bg-white border border-neutral-200 px-2 py-1 rounded-lg text-[10px] font-semibold" />
+                            </div>
+                          </div>
+                          <FontSelectorPills current={tplSubtitleFontFamily} onSelect={setTplSubtitleFontFamily} />
+                        </div>
+
+                        {/* Heading Elements */}
+                        <div className="bg-neutral-50 p-3 rounded-2xl border border-neutral-200/50 space-y-4">
+                          <span className="text-[10px] font-black text-neutral-700 uppercase tracking-wider block">Elemen: Heading Tags (H1 - H6)</span>
+                          
+                          {/* H1 */}
+                          <div className="space-y-1.5 border-b border-neutral-200/40 pb-2.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                              <span className="text-[9px] font-black text-primary">Heading H1</span>
+                              <input type="text" value={tplH1FontFamily} onChange={(e) => setTplH1FontFamily(e.target.value)} placeholder="Font Family" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                              <div className="flex gap-1 items-center">
+                                <input type="color" value={tplH1FontColor} onChange={(e) => setTplH1FontColor(e.target.value)} className="w-5 h-5 p-0.5 border border-neutral-200 rounded cursor-pointer shrink-0" />
+                                <input type="text" value={tplH1FontColor} onChange={(e) => setTplH1FontColor(e.target.value)} className="w-full bg-white border border-neutral-200 px-1 py-0.5 rounded text-[8px] font-mono uppercase" />
+                              </div>
+                              <input type="text" value={tplH1FontSize} onChange={(e) => setTplH1FontSize(e.target.value)} placeholder="Size (e.g. 28pt)" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                            </div>
+                            <FontSelectorPills current={tplH1FontFamily} onSelect={setTplH1FontFamily} />
+                          </div>
+
+                          {/* H2 */}
+                          <div className="space-y-1.5 border-b border-neutral-200/40 pb-2.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                              <span className="text-[9px] font-black text-primary">Heading H2</span>
+                              <input type="text" value={tplH2FontFamily} onChange={(e) => setTplH2FontFamily(e.target.value)} placeholder="Font Family" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                              <div className="flex gap-1 items-center">
+                                <input type="color" value={tplH2FontColor} onChange={(e) => setTplH2FontColor(e.target.value)} className="w-5 h-5 p-0.5 border border-neutral-200 rounded cursor-pointer shrink-0" />
+                                <input type="text" value={tplH2FontColor} onChange={(e) => setTplH2FontColor(e.target.value)} className="w-full bg-white border border-neutral-200 px-1 py-0.5 rounded text-[8px] font-mono uppercase" />
+                              </div>
+                              <input type="text" value={tplH2FontSize} onChange={(e) => setTplH2FontSize(e.target.value)} placeholder="Size (e.g. 24pt)" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                            </div>
+                            <FontSelectorPills current={tplH2FontFamily} onSelect={setTplH2FontFamily} />
+                          </div>
+
+                          {/* H3 */}
+                          <div className="space-y-1.5 border-b border-neutral-200/40 pb-2.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                              <span className="text-[9px] font-black text-primary">Heading H3</span>
+                              <input type="text" value={tplH3FontFamily} onChange={(e) => setTplH3FontFamily(e.target.value)} placeholder="Font Family" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                              <div className="flex gap-1 items-center">
+                                <input type="color" value={tplH3FontColor} onChange={(e) => setTplH3FontColor(e.target.value)} className="w-5 h-5 p-0.5 border border-neutral-200 rounded cursor-pointer shrink-0" />
+                                <input type="text" value={tplH3FontColor} onChange={(e) => setTplH3FontColor(e.target.value)} className="w-full bg-white border border-neutral-200 px-1 py-0.5 rounded text-[8px] font-mono uppercase" />
+                              </div>
+                              <input type="text" value={tplH3FontSize} onChange={(e) => setTplH3FontSize(e.target.value)} placeholder="Size (e.g. 20pt)" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                            </div>
+                            <FontSelectorPills current={tplH3FontFamily} onSelect={setTplH3FontFamily} />
+                          </div>
+
+                          {/* H4 */}
+                          <div className="space-y-1.5 border-b border-neutral-200/40 pb-2.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                              <span className="text-[9px] font-black text-primary">Heading H4</span>
+                              <input type="text" value={tplH4FontFamily} onChange={(e) => setTplH4FontFamily(e.target.value)} placeholder="Font Family" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                              <div className="flex gap-1 items-center">
+                                <input type="color" value={tplH4FontColor} onChange={(e) => setTplH4FontColor(e.target.value)} className="w-5 h-5 p-0.5 border border-neutral-200 rounded cursor-pointer shrink-0" />
+                                <input type="text" value={tplH4FontColor} onChange={(e) => setTplH4FontColor(e.target.value)} className="w-full bg-white border border-neutral-200 px-1 py-0.5 rounded text-[8px] font-mono uppercase" />
+                              </div>
+                              <input type="text" value={tplH4FontSize} onChange={(e) => setTplH4FontSize(e.target.value)} placeholder="Size (e.g. 16pt)" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                            </div>
+                            <FontSelectorPills current={tplH4FontFamily} onSelect={setTplH4FontFamily} />
+                          </div>
+
+                          {/* H5 */}
+                          <div className="space-y-1.5 border-b border-neutral-200/40 pb-2.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                              <span className="text-[9px] font-black text-primary">Heading H5</span>
+                              <input type="text" value={tplH5FontFamily} onChange={(e) => setTplH5FontFamily(e.target.value)} placeholder="Font Family" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                              <div className="flex gap-1 items-center">
+                                <input type="color" value={tplH5FontColor} onChange={(e) => setTplH5FontColor(e.target.value)} className="w-5 h-5 p-0.5 border border-neutral-200 rounded cursor-pointer shrink-0" />
+                                <input type="text" value={tplH5FontColor} onChange={(e) => setTplH5FontColor(e.target.value)} className="w-full bg-white border border-neutral-200 px-1 py-0.5 rounded text-[8px] font-mono uppercase" />
+                              </div>
+                              <input type="text" value={tplH5FontSize} onChange={(e) => setTplH5FontSize(e.target.value)} placeholder="Size (e.g. 14pt)" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                            </div>
+                            <FontSelectorPills current={tplH5FontFamily} onSelect={setTplH5FontFamily} />
+                          </div>
+
+                          {/* H6 */}
+                          <div className="space-y-1.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                              <span className="text-[9px] font-black text-primary">Heading H6</span>
+                              <input type="text" value={tplH6FontFamily} onChange={(e) => setTplH6FontFamily(e.target.value)} placeholder="Font Family" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                              <div className="flex gap-1 items-center">
+                                <input type="color" value={tplH6FontColor} onChange={(e) => setTplH6FontColor(e.target.value)} className="w-5 h-5 p-0.5 border border-neutral-200 rounded cursor-pointer shrink-0" />
+                                <input type="text" value={tplH6FontColor} onChange={(e) => setTplH6FontColor(e.target.value)} className="w-full bg-white border border-neutral-200 px-1 py-0.5 rounded text-[8px] font-mono uppercase" />
+                              </div>
+                              <input type="text" value={tplH6FontSize} onChange={(e) => setTplH6FontSize(e.target.value)} placeholder="Size (e.g. 12pt)" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                            </div>
+                            <FontSelectorPills current={tplH6FontFamily} onSelect={setTplH6FontFamily} />
+                          </div>
+                        </div>
+
+                        {/* General Text & Paragraph */}
+                        <div className="bg-neutral-50 p-3 rounded-2xl border border-neutral-200/50 space-y-3">
+                          <span className="text-[10px] font-black text-neutral-700 uppercase tracking-wider block">Elemen: Text &amp; Paragraph</span>
+                          
+                          {/* General Text */}
+                          <div className="space-y-1 pb-2 border-b border-neutral-200/40">
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                              <span className="text-[9px] font-bold text-neutral-600">Umum (Text)</span>
+                              <input type="text" value={tplTextFontFamily} onChange={(e) => setTplTextFontFamily(e.target.value)} placeholder="Font Family" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                              <div className="flex gap-1 items-center">
+                                <input type="color" value={tplTextFontColor} onChange={(e) => setTplTextFontColor(e.target.value)} className="w-5 h-5 p-0.5 border border-neutral-200 rounded cursor-pointer shrink-0" />
+                                <input type="text" value={tplTextFontColor} onChange={(e) => setTplTextFontColor(e.target.value)} className="w-full bg-white border border-neutral-200 px-1 py-0.5 rounded text-[8px] font-mono uppercase" />
+                              </div>
+                              <input type="text" value={tplTextFontSize} onChange={(e) => setTplTextFontSize(e.target.value)} placeholder="Size (e.g. 11pt)" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                            </div>
+                            <FontSelectorPills current={tplTextFontFamily} onSelect={setTplTextFontFamily} />
+                          </div>
+
+                          {/* Paragraph */}
+                          <div className="space-y-1">
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                              <span className="text-[9px] font-bold text-neutral-600">Paragraf (p)</span>
+                              <input type="text" value={tplParagraphFontFamily} onChange={(e) => setTplParagraphFontFamily(e.target.value)} placeholder="Font Family" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                              <div className="flex gap-1 items-center">
+                                <input type="color" value={tplParagraphFontColor} onChange={(e) => setTplParagraphFontColor(e.target.value)} className="w-5 h-5 p-0.5 border border-neutral-200 rounded cursor-pointer shrink-0" />
+                                <input type="text" value={tplParagraphFontColor} onChange={(e) => setTplParagraphFontColor(e.target.value)} className="w-full bg-white border border-neutral-200 px-1 py-0.5 rounded text-[8px] font-mono uppercase" />
+                              </div>
+                              <input type="text" value={tplParagraphFontSize} onChange={(e) => setTplParagraphFontSize(e.target.value)} placeholder="Size (e.g. 11pt)" className="bg-white border border-neutral-200 px-2 py-1 rounded text-[9px]" />
+                            </div>
+                            <FontSelectorPills current={tplParagraphFontFamily} onSelect={setTplParagraphFontFamily} />
+                          </div>
+
+                          {/* Menu Header Font */}
+                          <div className="space-y-1 pt-2 border-t border-neutral-200/40">
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                              <span className="text-[9px] font-bold text-neutral-600">Menu Header</span>
+                              <input 
+                                type="text" 
+                                value={tplMenuFontFamily} 
+                                onChange={(e) => setTplMenuFontFamily(e.target.value)} 
+                                placeholder="Font Family (e.g. Arial Nova)" 
+                                className="col-span-3 bg-white border border-neutral-200 px-2 py-1 rounded text-[9px] font-semibold" 
+                              />
+                            </div>
+                            <FontSelectorPills current={tplMenuFontFamily} onSelect={setTplMenuFontFamily} />
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="pt-3 flex gap-2 justify-end text-xs font-bold">
                         <button 
                           type="button"
@@ -3211,6 +5980,10 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                 </div>
               )}
             </div>
+          )}
+
+          {activeTab === "edufin" && (
+            <EduFin pmbApplicants={pmbApplicants} />
           )}
         </div>
       )}

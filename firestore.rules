@@ -74,6 +74,23 @@ service cloud.firestore {
           && data.order is number;
     }
 
+    function isValidStudentPayment(data) {
+      return data.name is string && data.name.size() <= 200
+          && data.nim is string && data.nim.size() <= 100
+          && data.major is string && data.major in ['D3 Perhotelan', 'D3 Usaha Perjalanan Wisata']
+          && data.classType is string && data.classType in ['Reguler', 'Kelas Karyawan']
+          && data.amount is number
+          && data.status is string && data.status in ['Lunas', 'Menunggu', 'Tunggakan']
+          && data.lastPaid is string && data.lastPaid.size() <= 100;
+    }
+
+    function isValidCampusExpense(data) {
+      return data.category is string && data.category in ['Bahan Lab Praktik', 'Utilitas Kampus', 'Perbaikan Lab Hotel', 'Gaji & Staf', 'Promosi & PMB', 'Lain-lain']
+          && data.amount is number
+          && data.date is string && data.date.size() <= 100
+          && data.description is string && data.description.size() <= 1000;
+    }
+
     // Website Settings
     match /website_settings/{settingId} {
       allow read, get: if true;
@@ -100,6 +117,31 @@ service cloud.firestore {
 
     // Board Members
     match /board_members/{memberId} {
+      allow read, write: if true;
+    }
+
+    // EduFin Student SPP Payments
+    match /edufin_spp/{sppId} {
+      allow read, write: if true;
+    }
+
+    // EduFin Campus Expenses
+    match /edufin_expenses/{expenseId} {
+      allow read, write: if true;
+    }
+
+    // Joomla Menu Items
+    match /joomla_menu_items/{itemId} {
+      allow read, write: if true;
+    }
+
+    // Joomla Template Styles
+    match /joomla_template_styles/{styleId} {
+      allow read, write: if true;
+    }
+
+    // Joomla Slides
+    match /joomla_slides/{slideId} {
       allow read, write: if true;
     }
   }

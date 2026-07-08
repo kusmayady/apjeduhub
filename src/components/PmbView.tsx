@@ -25,6 +25,7 @@ export default function PmbView({ activeTab, currentLang = "ID" }: PmbViewProps)
   const [phone, setPhone] = useState<string>("");
   const [highSchool, setHighSchool] = useState<string>("");
   const [gradYear, setGradYear] = useState<string>("2026");
+  const [prodi, setProdi] = useState<string>("Perhotelan");
   const [major, setMajor] = useState<string>("D3 Perhotelan");
   const [classType, setClassType] = useState<string>("Reguler Pagi");
 
@@ -105,6 +106,8 @@ export default function PmbView({ activeTab, currentLang = "ID" }: PmbViewProps)
     setEmail("");
     setPhone("");
     setHighSchool("");
+    setProdi("Perhotelan");
+    setMajor("D3 Perhotelan");
     setStep(1);
     setIsSubmitted(false);
     setRegistrationCard(null);
@@ -540,19 +543,64 @@ export default function PmbView({ activeTab, currentLang = "ID" }: PmbViewProps)
                 {step === 2 && (
                   <div className="space-y-5 animate-in slide-in-from-right-3 duration-200">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="block text-xs font-extrabold text-neutral-800 uppercase">
-                          Pilihan Program Studi*:
-                        </label>
-                        <select
-                          value={major}
-                          onChange={(e) => setMajor(e.target.value)}
-                          className="w-full px-4 py-2.5 text-xs rounded-lg border border-neutral-200 focus:outline-none focus:border-primary font-semibold bg-neutral-50/50 transition"
-                          id="form-major-select"
-                        >
-                          <option value="D3 Perhotelan">D3 Perhotelan (Hotel Management)</option>
-                          <option value="D3 Usaha Perjalanan Wisata">D3 Usaha Perjalanan Wisata (Bina Wisata)</option>
-                        </select>
+                      <div className="space-y-3">
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-extrabold text-neutral-800 uppercase">
+                            Jenjang Studi*:
+                          </label>
+                          <div className="grid grid-cols-4 gap-1.5">
+                            {["D1", "D2", "D3", "D4"].map((j) => {
+                              const isD3 = j === "D3";
+                              return (
+                                <div
+                                  key={j}
+                                  className={`py-1.5 px-1 rounded-lg border text-center flex flex-col items-center justify-center transition-all ${
+                                    isD3
+                                      ? "bg-blue-50 text-blue-800 border-blue-400 ring-2 ring-blue-400/20 shadow-sm"
+                                      : "bg-neutral-100 text-neutral-400 border-neutral-200/60 opacity-60"
+                                  }`}
+                                >
+                                  <span className="text-[11px] font-bold">{j}</span>
+                                  <span className="text-[7px] font-black uppercase tracking-wider scale-90 mt-0.5 opacity-80">
+                                    {isD3 ? "ON" : "OFF"}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-extrabold text-neutral-800 uppercase">
+                            Program Studi*:
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              { id: "Perhotelan", label: "Perhotelan" },
+                              { id: "Usaha Pariwisata", label: "Usaha Pariwisata" }
+                            ].map((p) => {
+                              const isSelected = prodi === p.id;
+                              return (
+                                <button
+                                  key={p.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setProdi(p.id);
+                                    setMajor(`D3 ${p.id}`);
+                                  }}
+                                  className={`py-2 px-2 text-[11px] font-bold rounded-lg border text-center transition duration-150 cursor-pointer flex items-center justify-center gap-1 flex-grow ${
+                                    isSelected
+                                      ? "bg-[#0050A0] text-white border-[#0050A0] shadow-md ring-2 ring-blue-500/20"
+                                      : "bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100 hover:text-neutral-900"
+                                  }`}
+                                >
+                                  {isSelected && <span className="text-[10px]">✨</span>}
+                                  <span>{p.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                       <div className="space-y-1.5">
                         <label className="block text-xs font-extrabold text-neutral-800 uppercase">

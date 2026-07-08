@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Menu, X, ChevronDown, Phone, Mail, MapPin, GraduationCap } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Menu, X, ChevronDown, Phone, Mail, MapPin, GraduationCap, Settings } from "lucide-react";
 import { DbMenuItem, DbTemplateStyle, DEFAULT_MENU_ITEMS } from "../lib/dbService";
 import { LANGUAGES, LanguageCode, createTranslator } from "../lib/translations";
 
@@ -20,6 +20,15 @@ export default function Header({ currentSection, activeTab, onNavigate, menuItem
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [img0Failed, setImg0Failed] = useState(false);
   const [img1Failed, setImg1Failed] = useState(false);
+
+  // Reset image error states when logo header/footer is updated
+  useEffect(() => {
+    setImg0Failed(false);
+  }, [activeStyle?.logoHeader]);
+
+  useEffect(() => {
+    setImg1Failed(false);
+  }, [activeStyle?.logoFooter]);
 
   const t = createTranslator(currentLang);
 
@@ -50,7 +59,7 @@ export default function Header({ currentSection, activeTab, onNavigate, menuItem
 
   const activeMenus = menuItems && menuItems.length > 0 ? menuItems : DEFAULT_MENU_ITEMS;
 
-  const navItems = activeMenus.map(item => ({
+  const navItemsRaw = activeMenus.map(item => ({
     id: item.sectionId,
     label: t(item.sectionId, item.label),
     tabs: (sectionTabsMap[item.sectionId] || []).map(tab => ({
@@ -58,6 +67,16 @@ export default function Header({ currentSection, activeTab, onNavigate, menuItem
       label: t(tab.id, tab.label)
     }))
   }));
+
+  // Deduplicate by sectionId (id) to avoid duplicate React keys
+  const seenSections = new Set<string>();
+  const navItems = navItemsRaw.filter(item => {
+    if (seenSections.has(item.id)) {
+      return false;
+    }
+    seenSections.add(item.id);
+    return true;
+  });
 
   const handleNavItemClick = (sectionId: string, defaultTab: string = "") => {
     onNavigate(sectionId, defaultTab);
@@ -145,6 +164,16 @@ export default function Header({ currentSection, activeTab, onNavigate, menuItem
               )}
             </div>
 
+            <button
+              onClick={() => onNavigate("admin", "")}
+              className="bg-blue-950/60 hover:bg-neutral-800 border border-white/20 px-2.5 py-1 rounded text-[#FFDCA0] text-[11px] font-black tracking-wide flex items-center gap-1.5 transition cursor-pointer select-none"
+              title="Akses Portal Admin"
+              id="topbar-admin-portal"
+            >
+              <Settings size={12} className="text-[#FFC46A]" />
+              <span>{t("admin_portal", "Konsol Admin")}</span>
+            </button>
+
             <button 
               onClick={() => handleNavItemClick("pmb", "daftar")} 
               className="bg-accent text-primary text-xs font-extrabold px-3 py-1 rounded hover:bg-yellow-400 transition cursor-pointer shadow-xs"
@@ -166,7 +195,7 @@ export default function Header({ currentSection, activeTab, onNavigate, menuItem
         >
           {!img0Failed ? (
             <img 
-              src="/input_file_0.png" 
+              src={activeStyle?.logoHeader || "/input_file_0.png"} 
               alt="Akademi Pariwisata Jakarta" 
               className="h-11 md:h-14 object-contain group-hover:scale-105 transition duration-300 animate-fade-in"
               onError={() => setImg0Failed(true)}

@@ -76,6 +76,81 @@
         "order": { "type": "number", "description": "Explicit integer sort order" }
       },
       "required": ["name", "role", "education", "avatar", "category", "order"]
+    },
+    "StudentPayment": {
+      "title": "StudentPayment",
+      "description": "Student tuition payment records managed by administration",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name of the student" },
+        "nim": { "type": "string", "description": "Student registration number" },
+        "major": { "type": "string", "enum": ["D3 Perhotelan", "D3 Usaha Perjalanan Wisata"] },
+        "classType": { "type": "string", "enum": ["Reguler", "Kelas Karyawan"] },
+        "amount": { "type": "number", "description": "Total amount of fee" },
+        "status": { "type": "string", "enum": ["Lunas", "Menunggu", "Tunggakan"] },
+        "lastPaid": { "type": "string", "description": "Last payment date timestamp" }
+      },
+      "required": ["name", "nim", "major", "classType", "amount", "status", "lastPaid"]
+    },
+    "CampusExpense": {
+      "title": "CampusExpense",
+      "description": "Campus operational expenses and investments",
+      "type": "object",
+      "properties": {
+        "category": { "type": "string", "enum": ["Bahan Lab Praktik", "Utilitas Kampus", "Perbaikan Lab Hotel", "Gaji & Staf", "Promosi & PMB", "Lain-lain"] },
+        "amount": { "type": "number", "description": "Amount spent" },
+        "date": { "type": "string", "description": "Date of the expense" },
+        "description": { "type": "string", "description": "Detailed description of what was purchased" }
+      },
+      "required": ["category", "amount", "date", "description"]
+    },
+    "JoomlaMenuItem": {
+      "title": "JoomlaMenuItem",
+      "description": "Joomla navigation menu items",
+      "type": "object",
+      "properties": {
+        "label": { "type": "string", "description": "Menu title text" },
+        "sectionId": { "type": "string", "description": "Target section name" },
+        "tabId": { "type": "string", "description": "Target tab id" },
+        "parentId": { "type": "string", "description": "Optional parent menu id" },
+        "order": { "type": "number", "description": "Numeric display ordering" },
+        "templateStyleId": { "type": "string", "description": "Associated custom style id" }
+      },
+      "required": ["label", "sectionId", "tabId", "order", "templateStyleId"]
+    },
+    "JoomlaTemplateStyle": {
+      "title": "JoomlaTemplateStyle",
+      "description": "Joomla style customizer templates",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Style template display name" },
+        "primaryColor": { "type": "string", "description": "Hex value for primary color theme" },
+        "secondaryColor": { "type": "string", "description": "Hex value for secondary color theme" },
+        "accentColor": { "type": "string", "description": "Hex value for accent highlighting" },
+        "backgroundColor": { "type": "string", "description": "Hex value for site background" },
+        "fontFamily": { "type": "string", "description": "Body typography class reference" },
+        "headingFontName": { "type": "string", "description": "Header font face name" },
+        "cardRadius": { "type": "string", "description": "Tailwind utility class for layout border radius" },
+        "headerStyle": { "type": "string", "description": "Design mode of the header navigation" },
+        "showHeroBackground": { "type": "boolean", "description": "Visiblity status of decorative background hero" },
+        "badgeStyle": { "type": "string", "description": "Visual form factor of text badges" }
+      },
+      "required": ["name", "primaryColor", "secondaryColor", "accentColor", "backgroundColor", "fontFamily", "headingFontName", "cardRadius", "headerStyle", "showHeroBackground", "badgeStyle"]
+    },
+    "JoomlaSlide": {
+      "title": "JoomlaSlide",
+      "description": "Customizable homepage banner slides",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the slide banner" },
+        "subtitle": { "type": "string", "description": "Subtitle text for highlighting" },
+        "desc": { "type": "string", "description": "Detailed description copy" },
+        "ctaText": { "type": "string", "description": "Call to action button label" },
+        "imageUrl": { "type": "string", "description": "Optional background image or color reference" },
+        "order": { "type": "number", "description": "Display order weight" },
+        "published": { "type": "boolean", "description": "Active visibility status" }
+      },
+      "required": ["title", "subtitle", "desc", "ctaText", "order", "published"]
     }
   },
   "firestore": {
@@ -98,6 +173,26 @@
     "/board_members/{memberId}": {
       "schema": "BoardMember",
       "description": "Academic board of management and foundation directories"
+    },
+    "/edufin_expenses/{expenseId}": {
+      "schema": "CampusExpense",
+      "description": "List of campus operational expenses"
+    },
+    "/edufin_spp/{sppId}": {
+      "schema": "StudentPayment",
+      "description": "List of student tuition fee (SPP) payments"
+    },
+    "/joomla_menu_items/{itemId}": {
+      "schema": "JoomlaMenuItem",
+      "description": "Joomla navigation menu items"
+    },
+    "/joomla_template_styles/{styleId}": {
+      "schema": "JoomlaTemplateStyle",
+      "description": "Joomla style customizer templates"
+    },
+    "/joomla_slides/{slideId}": {
+      "schema": "JoomlaSlide",
+      "description": "Joomla banner slide carousels"
     }
   }
 }

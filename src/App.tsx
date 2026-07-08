@@ -75,7 +75,41 @@ export default function App() {
     cardRadius: "rounded-xl",
     headerStyle: "sticky",
     showHeroBackground: true,
-    badgeStyle: "pill"
+    badgeStyle: "pill",
+    logoHeader: "/input_file_0.png",
+    logoFooter: "/input_file_1.png",
+    favicon: "/input_file_1.png",
+    titleFontFamily: "Montserrat",
+    titleFontColor: "#002f5a",
+    titleFontSize: "32pt",
+    subtitleFontFamily: "Plus Jakarta Sans",
+    subtitleFontColor: "#475569",
+    subtitleFontSize: "16pt",
+    h1FontFamily: "Poppins",
+    h1FontColor: "#002f5a",
+    h1FontSize: "28pt",
+    h2FontFamily: "Poppins",
+    h2FontColor: "#002f5a",
+    h2FontSize: "24pt",
+    h3FontFamily: "Poppins",
+    h3FontColor: "#002f5a",
+    h3FontSize: "20pt",
+    h4FontFamily: "Poppins",
+    h4FontColor: "#002f5a",
+    h4FontSize: "16pt",
+    h5FontFamily: "Poppins",
+    h5FontColor: "#1e3a8a",
+    h5FontSize: "14pt",
+    h6FontFamily: "Poppins",
+    h6FontColor: "#1e3a8a",
+    h6FontSize: "12pt",
+    textFontFamily: "Plus Jakarta Sans",
+    textFontColor: "#1e293b",
+    textFontSize: "11pt",
+    paragraphFontFamily: "Plus Jakarta Sans",
+    paragraphFontColor: "#334155",
+    paragraphFontSize: "11pt",
+    menuFontFamily: "Arial Nova"
   };
 
   // Load article from URL query params on mount
@@ -118,6 +152,29 @@ export default function App() {
     initDb();
   }, [currentSection]);
 
+  // Dynamic Favicon Updater based on custom template setting
+  useEffect(() => {
+    const faviconUrl = activeStyle?.favicon || "/input_file_1.png";
+    const link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+    if (link) {
+      link.href = faviconUrl;
+    } else {
+      const newLink = document.createElement("link");
+      newLink.rel = "icon";
+      newLink.href = faviconUrl;
+      document.head.appendChild(newLink);
+    }
+  }, [activeStyle]);
+
+  const formatFontSize = (val: string | undefined, defaultVal: string) => {
+    if (!val) return defaultVal;
+    const trimmed = val.trim();
+    if (/^\d+(\.\d+)?$/.test(trimmed)) {
+      return `${trimmed}pt`;
+    }
+    return trimmed;
+  };
+
   const handleNavigate = (section: string, tab: string = "") => {
     setCurrentSection(section);
     setActiveTab(tab);
@@ -127,11 +184,92 @@ export default function App() {
     <div className="min-h-screen flex flex-col justify-between text-neutral-800 font-body antialiased transition-colors duration-300" id="main-body-container">
       {/* Joomla dynamic template stylesheet injection */}
       <style>{`
-        :root {
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Merriweather:wght@300;400;700&family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Saira+Condensed:wght@300;400;500;600;700;800&family=Roboto+Condensed:wght@300;400;700&family=PT+Sans+Narrow:wght@400;700&family=Fira+Sans+Condensed:wght@300;400;500;600;700&display=swap');
+
+         :root {
           --color-primary: ${activeStyle.primaryColor} !important;
           --color-accent: ${activeStyle.accentColor} !important;
           --color-accent-light: ${activeStyle.backgroundColor} !important;
           --font-heading: "${activeStyle.headingFontName}", ${activeStyle.fontFamily === 'font-serif' ? 'serif' : 'sans-serif'} !important;
+        }
+
+        /* Dynamic Typography Styles */
+        .style-title, .title-styling {
+          font-family: "${activeStyle.titleFontFamily || activeStyle.headingFontName || 'Poppins'}", sans-serif !important;
+          color: ${activeStyle.titleFontColor || activeStyle.primaryColor} !important;
+          font-size: ${formatFontSize(activeStyle.titleFontSize, '32pt')} !important;
+        }
+        .style-subtitle, .subtitle-styling {
+          font-family: "${activeStyle.subtitleFontFamily || 'Plus Jakarta Sans'}", sans-serif !important;
+          color: ${activeStyle.subtitleFontColor || '#475569'} !important;
+          font-size: ${formatFontSize(activeStyle.subtitleFontSize, '16pt')} !important;
+        }
+
+        h1, .style-h1, .h1-styling {
+          font-family: "${activeStyle.h1FontFamily || activeStyle.headingFontName || 'Poppins'}", sans-serif !important;
+          color: ${activeStyle.h1FontColor || activeStyle.primaryColor} !important;
+          font-size: ${formatFontSize(activeStyle.h1FontSize, '28pt')} !important;
+        }
+        h2, .style-h2, .h2-styling {
+          font-family: "${activeStyle.h2FontFamily || activeStyle.headingFontName || 'Poppins'}", sans-serif !important;
+          color: ${activeStyle.h2FontColor || activeStyle.primaryColor} !important;
+          font-size: ${formatFontSize(activeStyle.h2FontSize, '24pt')} !important;
+        }
+        h3, .style-h3, .h3-styling {
+          font-family: "${activeStyle.h3FontFamily || activeStyle.headingFontName || 'Poppins'}", sans-serif !important;
+          color: ${activeStyle.h3FontColor || activeStyle.primaryColor} !important;
+          font-size: ${formatFontSize(activeStyle.h3FontSize, '20pt')} !important;
+        }
+        h4, .style-h4, .h4-styling {
+          font-family: "${activeStyle.h4FontFamily || activeStyle.headingFontName || 'Poppins'}", sans-serif !important;
+          color: ${activeStyle.h4FontColor || activeStyle.primaryColor} !important;
+          font-size: ${formatFontSize(activeStyle.h4FontSize, '16pt')} !important;
+        }
+        h5, .style-h5, .h5-styling {
+          font-family: "${activeStyle.h5FontFamily || activeStyle.headingFontName || 'Poppins'}", sans-serif !important;
+          color: ${activeStyle.h5FontColor || activeStyle.secondaryColor} !important;
+          font-size: ${formatFontSize(activeStyle.h5FontSize, '14pt')} !important;
+        }
+        h6, .style-h6, .h6-styling {
+          font-family: "${activeStyle.h6FontFamily || activeStyle.headingFontName || 'Poppins'}", sans-serif !important;
+          color: ${activeStyle.h6FontColor || activeStyle.secondaryColor} !important;
+          font-size: ${formatFontSize(activeStyle.h6FontSize, '12pt')} !important;
+        }
+        .style-text, .text-styling {
+          font-family: "${activeStyle.textFontFamily || 'Plus Jakarta Sans'}", sans-serif !important;
+          color: ${activeStyle.textFontColor || '#1e293b'} !important;
+          font-size: ${formatFontSize(activeStyle.textFontSize, '11pt')} !important;
+        }
+        p, .style-paragraph, .paragraph-styling {
+          font-family: "${activeStyle.paragraphFontFamily || 'Plus Jakarta Sans'}", sans-serif !important;
+          color: ${activeStyle.paragraphFontColor || '#334155'} !important;
+          font-size: ${formatFontSize(activeStyle.paragraphFontSize, '11pt')} !important;
+          line-height: 1.625 !important;
+        }
+
+        /* Menu Header Font Style */
+        header, header button, header a, header span, .header-menu-font {
+          font-family: "${activeStyle.menuFontFamily || 'Arial Nova'}", "Arial", sans-serif !important;
+        }
+
+        /* High-contrast and readability overrides for footer and other dark containers */
+        footer p {
+          color: #e5e7eb !important; /* default light-gray text for paragraphs in footer */
+        }
+        footer .text-neutral-300, footer .text-neutral-300 p {
+          color: #cbd5e1 !important; /* high-contrast light grey for metadata/descriptions */
+        }
+        footer .text-neutral-400, footer .text-neutral-400 p {
+          color: #94a3b8 !important; /* high-contrast slate grey for legal copyright and secondary info */
+        }
+        footer .text-white, footer .text-white p {
+          color: #ffffff !important;
+        }
+        footer button, footer a, footer span {
+          color: inherit;
+        }
+        footer button:hover, footer a:hover {
+          color: var(--color-accent) !important;
         }
 
         /* Dynamically repaint primary color classes throughout all UI components */
@@ -248,7 +386,7 @@ export default function App() {
           <div className="md:col-span-4 space-y-4">
             <div className="flex items-center gap-3">
               <img 
-                src="/input_file_1.png" 
+                src={activeStyle?.logoFooter || "/input_file_1.png"} 
                 alt="APJ Emblem Seal" 
                 className="h-10 w-10 object-contain bg-white rounded-full p-0.5 border border-accent" 
               />
