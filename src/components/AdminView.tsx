@@ -85,6 +85,51 @@ import {
   Menu
 } from "lucide-react";
 
+// Helper functions for date picker conversions (Indonesian <-> ISO YYYY-MM-DD)
+function indonesianToISODate(indoDateStr: string): string {
+  if (!indoDateStr) return new Date().toISOString().split('T')[0];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(indoDateStr)) return indoDateStr;
+
+  const months = [
+    "januari", "februari", "maret", "april", "mei", "juni",
+    "juli", "agustus", "september", "oktober", "november", "desember"
+  ];
+  
+  const parts = indoDateStr.toLowerCase().trim().split(/\s+/);
+  if (parts.length === 3) {
+    const day = parts[0].padStart(2, '0');
+    const monthIndex = months.indexOf(parts[1]);
+    const year = parts[2];
+    if (monthIndex !== -1 && /^\d{4}$/.test(year) && /^\d{1,2}$/.test(day)) {
+      const month = String(monthIndex + 1).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+  }
+  
+  try {
+    const d = new Date(indoDateStr);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split('T')[0];
+    }
+  } catch (e) {}
+
+  return new Date().toISOString().split('T')[0];
+}
+
+function isoToIndonesianDate(isoDateStr: string): string {
+  if (!isoDateStr) return "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDateStr)) {
+    return isoDateStr;
+  }
+  const months = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+  const [year, month, day] = isoDateStr.split('-');
+  const monthName = months[parseInt(month, 10) - 1] || month;
+  return `${parseInt(day, 10)} ${monthName} ${year}`;
+}
+
 // Helper component for file upload of header, footer and favicon
 function FileUploadField({ 
   label, 
@@ -238,6 +283,7 @@ function FontSelectorPills({
 }
 
 export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => void }) {
+  const annFormRef = React.useRef<HTMLDivElement>(null);
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
@@ -1500,6 +1546,9 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
     setWHow("");
     
     setShowAnnModal(true);
+    setTimeout(() => {
+      annFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
   };
 
   const handleOpenEditAnn = (ann: AnnouncementItem) => {
@@ -1524,6 +1573,9 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
     setWHow("");
 
     setShowAnnModal(true);
+    setTimeout(() => {
+      annFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
   };
 
   const handleSubmitAnnForm = async (e: React.FormEvent) => {
@@ -1801,7 +1853,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
               }`}
             >
               <Link2 size={14} />
-              Kelola Menu (Joomla CMS) ({joomlaMenus.length})
+              Kelola Menu ({joomlaMenus.length})
             </button>
             <button 
               onClick={() => { setActiveTab("template_manager"); }}
@@ -2157,12 +2209,15 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
 
               {/* Add/Edit Modal */}
               {showAnnModal && (
-                <div className="bg-[#FFFCEF] border border-accent p-6 rounded-3xl max-w-2xl space-y-4 shadow-md animate-fade-in">
+                <div ref={annFormRef} className="bg-[#FFFCEF] border border-accent p-6 rounded-3xl max-w-7xl w-full space-y-4 shadow-md animate-fade-in mx-auto">
                   <h3 className="font-extrabold text-sm text-primary font-heading uppercase tracking-wide flex items-center gap-1.5">
                     {editingAnnId ? <Edit2 size={16} /> : <Plus size={16} />} 
                     {editingAnnId ? "Edit Postingan Pengumuman" : "Buat Baru Postingan Pengumuman"}
                   </h3>
-                  <form onSubmit={handleSubmitAnnForm} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <form onSubmit={handleSubmitAnnForm} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Left Column: Form Controls */}
+                    <div className="lg:col-span-7 space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-neutral-500 block uppercase">Kategori Kabar</label>
                       <select 
@@ -2182,11 +2237,10 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-neutral-500 block uppercase">Tanggal Publikasi</label>
                       <input 
-                        type="text"
+                        type="date"
                         required
-                        placeholder="Contoh: 18 Juni 2026"
-                        value={annDate}
-                        onChange={(e) => setAnnDate(e.target.value)}
+                        value={indonesianToISODate(annDate)}
+                        onChange={(e) => setAnnDate(isoToIndonesianDate(e.target.value))}
                         className="w-full bg-white border border-neutral-300 text-xs py-2 px-2.5 rounded-xl focus:ring-1 focus:ring-primary text-neutral-800"
                       />
                     </div>
@@ -2605,21 +2659,98 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                         />
                       </div>
                     </div>
+                    </div>
+                    </div>
 
-                    <div className="sm:col-span-2 flex justify-end gap-3 pt-2">
-                      <button 
-                        type="button" 
-                        onClick={() => setShowAnnModal(false)}
-                        className="px-3.5 py-1.5 bg-neutral-200 text-neutral-700 text-xs font-bold rounded-xl hover:bg-neutral-300 cursor-pointer transition"
-                      >
-                        Batal
-                      </button>
-                      <button 
-                        type="submit" 
-                        className="px-4 py-1.5 bg-primary text-white text-xs font-bold rounded-xl hover:bg-opacity-90 cursor-pointer transition"
-                      >
-                        {editingAnnId ? "Simpan Pembaruan" : "Publikasikan Sekarang"}
-                      </button>
+                    {/* Right Column: Sticky Live Pre-publish Preview Panel */}
+                    <div className="lg:col-span-5 lg:sticky lg:top-4 bg-white/95 border border-neutral-200/80 p-5 rounded-3xl space-y-4 shadow-sm">
+                      <div className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-xl">
+                        <span className="text-xs">👁️</span>
+                        <span className="font-extrabold text-[10.5px] text-indigo-950 uppercase tracking-wider block">
+                          PRATINJAU LIVE POSTINGAN (SEBELUM PUBLIKASI)
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        {/* 1. Card Layout Preview */}
+                        <div className="space-y-1.5">
+                          <span className="text-[9px] font-bold text-neutral-400 uppercase block">Tampilan Kartu di Beranda</span>
+                          <div className="bg-white rounded-2xl border border-neutral-200/80 shadow-xs overflow-hidden flex flex-col justify-between max-w-full">
+                            <div className="relative shrink-0">
+                              <img 
+                                src={annImage || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=500"} 
+                                alt="Kabar Cover" 
+                                className="w-full h-32 object-cover"
+                              />
+                              <span className="absolute top-2 left-2 bg-primary text-[#FFDCA0] text-[8px] font-black px-2 py-0.5 rounded-sm border border-[#ffca7c]/15">
+                                {annCategory || "Kegiatan Akademik"}
+                              </span>
+                            </div>
+
+                            <div className="p-3.5 space-y-1.5 flex-grow">
+                              <span className="text-[9px] text-neutral-400 font-bold block">{annDate || "Tanggal hari ini"}</span>
+                              <h4 className="font-extrabold text-neutral-900 leading-tight tracking-tight text-[11.5px] line-clamp-2 font-heading">
+                                {annTitle || "Judul Kabar Utama Akan Muncul Di Sini"}
+                              </h4>
+                              <p className="text-[10px] text-zinc-500 font-medium leading-relaxed line-clamp-2">
+                                {annDesc || "Tulis atau potong deskripsi ringkas (lead artikel) untuk pratinjau..."}
+                              </p>
+                            </div>
+                            <div className="p-2 bg-neutral-50 border-t flex justify-between items-center text-[9px] text-neutral-400 font-bold px-3">
+                              <span>Detail Berita</span>
+                              <span>→</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 2. Full Article View Preview */}
+                        <div className="space-y-1.5">
+                          <span className="text-[9px] font-bold text-neutral-400 uppercase block">Tampilan Detail Artikel Lengkap</span>
+                          <div className="bg-white border border-neutral-200/80 rounded-2xl p-4 space-y-3 overflow-y-auto max-h-[180px] scrollbar-thin">
+                            <div className="space-y-1.5">
+                              <span className="bg-violet-50 text-violet-700 border border-violet-100 text-[8px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded">
+                                {annCategory || "Kegiatan Akademik"}
+                              </span>
+                              <h3 className="font-black text-neutral-950 text-xs tracking-tight leading-tight font-heading">
+                                {annTitle || "Masukkan Judul Artikel Terlebih Dahulu"}
+                              </h3>
+                              <div className="text-[9px] text-neutral-400 font-bold flex gap-2">
+                                <span>📅 {annDate}</span>
+                                <span>•</span>
+                                <span>✍️ Humas APJ</span>
+                              </div>
+                            </div>
+                            <div className="border-t border-neutral-100 pt-2 space-y-2 text-[10.5px] text-neutral-700 leading-relaxed font-medium">
+                              {annContent ? (
+                                annContent.trim().split(/\r?\n/).map((p, idx) => p.trim() && (
+                                  <p key={idx} className="mb-1.5 last:mb-0">
+                                    {p.trim()}
+                                  </p>
+                                ))
+                              ) : (
+                                <p className="text-neutral-400 italic">Belum ada isian detail artikel lengkap. Gunakan asisten AI di atas untuk mengarang otomatis atau ketik manual.</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Modal Action Buttons */}
+                      <div className="flex justify-end gap-2.5 pt-3 border-t border-neutral-150">
+                        <button 
+                          type="button" 
+                          onClick={() => setShowAnnModal(false)}
+                          className="px-4 py-2 bg-neutral-200 text-neutral-700 text-xs font-bold rounded-xl hover:bg-neutral-300 cursor-pointer transition select-none flex-1 text-center"
+                        >
+                          Batal
+                        </button>
+                        <button 
+                          type="submit" 
+                          className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-opacity-90 cursor-pointer transition select-none flex-[2] text-center"
+                        >
+                          {editingAnnId ? "Simpan Pembaruan" : "Publikasikan Sekarang"}
+                        </button>
+                      </div>
                     </div>
                   </form>
                 </div>
@@ -3512,7 +3643,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                           setAnnTitle("");
                           setAnnDesc("");
                           setAnnContent("");
-                          setAnnDate(new Date().toISOString().split('T')[0]);
+                          setAnnDate(isoToIndonesianDate(new Date().toISOString().split('T')[0]));
                           setAnnImage("");
                           setShowAnnModal(true);
                         } else {
@@ -4165,7 +4296,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                               setAnnTitle("");
                               setAnnDesc("");
                               setAnnContent("");
-                              setAnnDate(new Date().toISOString().split('T')[0]);
+                              setAnnDate(isoToIndonesianDate(new Date().toISOString().split('T')[0]));
                               setAnnImage("");
                               setShowAnnModal(true);
                             }}

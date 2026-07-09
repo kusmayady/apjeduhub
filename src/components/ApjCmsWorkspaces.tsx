@@ -213,7 +213,7 @@ export default function ApjCmsWorkspaces({
       const response = await fetch("/api/ai-studio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: aiPrompt })
+        body: JSON.stringify({ prompt: aiPrompt, model: aiSelectedModel })
       });
       const data = await response.json();
       
