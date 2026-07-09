@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Menu, X, ChevronDown, Phone, Mail, MapPin, GraduationCap, Settings } from "lucide-react";
+import { Menu, X, ChevronDown, Phone, Mail, MapPin, GraduationCap, Settings, Home, Compass, ClipboardCheck, Users, MessageSquare } from "lucide-react";
 import { DbMenuItem, DbTemplateStyle, DEFAULT_MENU_ITEMS } from "../lib/dbService";
 import { LANGUAGES, LanguageCode, createTranslator } from "../lib/translations";
 
@@ -31,6 +31,28 @@ export default function Header({ currentSection, activeTab, onNavigate, menuItem
   }, [activeStyle?.logoFooter]);
 
   const t = createTranslator(currentLang);
+
+  const getMenuItemIcon = (id: string, isSelected: boolean) => {
+    const size = 16;
+    switch (id) {
+      case "home":
+        return <Home size={size} className={isSelected ? "text-emerald-600" : "text-emerald-500"} />;
+      case "profil":
+        return <Compass size={size} className={isSelected ? "text-rose-600" : "text-rose-500"} />;
+      case "akademik":
+        return <GraduationCap size={size} className={isSelected ? "text-violet-600" : "text-violet-500"} />;
+      case "pmb":
+        return <ClipboardCheck size={size} className={isSelected ? "text-amber-600" : "text-amber-500"} />;
+      case "kemahasiswaan":
+        return <Users size={size} className={isSelected ? "text-teal-600" : "text-teal-500"} />;
+      case "kontak":
+        return <MessageSquare size={size} className={isSelected ? "text-pink-600" : "text-pink-500"} />;
+      case "admin":
+        return <Settings size={size} className={isSelected ? "text-slate-600" : "text-slate-500"} />;
+      default:
+        return null;
+    }
+  };
 
   const sectionTabsMap: Record<string, { id: string, label: string }[]> = {
     profil: [
@@ -232,14 +254,15 @@ export default function Header({ currentSection, activeTab, onNavigate, menuItem
               >
                 <button
                   onClick={() => handleNavItemClick(item.id, hasTabs ? item.tabs[0].id : "")}
-                  className={`flex items-center gap-1 px-3 py-2 text-sm font-semibold rounded-md transition duration-200 cursor-pointer ${
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-md transition duration-200 cursor-pointer ${
                     isSelected 
-                      ? "text-[#0050A0] bg-neutral-50" 
+                      ? "text-[#0050A0] bg-neutral-50 font-bold" 
                       : "text-neutral-700 hover:text-[#0050A0] hover:bg-neutral-50"
                   }`}
                   id={`nav-${item.id}`}
                 >
-                  {item.label}
+                  {getMenuItemIcon(item.id, isSelected)}
+                  <span>{item.label}</span>
                   {hasTabs && <ChevronDown size={14} className="text-neutral-400 group-hover:text-primary transition-transform duration-200 group-hover:rotate-180" />}
                 </button>
 
@@ -372,12 +395,15 @@ export default function Header({ currentSection, activeTab, onNavigate, menuItem
                       }}
                       className={`w-full flex justify-between items-center py-2.5 px-3 rounded-lg text-sm font-bold block ${
                         isSelected 
-                          ? "text-primary bg-primary/5" 
+                          ? "text-primary bg-primary/5 font-black" 
                           : "text-neutral-700 hover:bg-neutral-50"
                       }`}
                       id={`mobile-main-${item.id}`}
                     >
-                      <span>{item.label}</span>
+                      <span className="flex items-center gap-2">
+                        {getMenuItemIcon(item.id, isSelected)}
+                        <span>{item.label}</span>
+                      </span>
                       {hasTabs && (
                         <ChevronDown 
                           size={16} 

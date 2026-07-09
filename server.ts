@@ -227,6 +227,78 @@ app.post("/api/edufin-advisor", async (req, res) => {
   }
 });
 
+// 4. Endpoint for AI Studio Generative DXP
+app.post("/api/ai-studio", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt harus diisi." });
+    }
+
+    if (!apiKey) {
+      return res.status(500).json({ 
+        error: "Kunci API Gemini belum dikonfigurasi. Silakan tambahkan GEMINI_API_KEY di Settings > Secrets." 
+      });
+    }
+
+    const systemInstruction = 
+      "Anda adalah APJ DXP AI Studio, kecerdasan buatan senior yang ahli menyusun struktur halaman, skema warna, copywriting, FAQ, dan metadata SEO " +
+      "khusus untuk Akademi Pariwisata Jakarta (APJ). Anda WAJIB memberikan respons dalam format JSON murni terstruktur.\n\n" +
+      "JSON Schema yang WAJIB dipatuhi:\n" +
+      "{\n" +
+      "  \"title\": \"Judul Halaman\",\n" +
+      "  \"subtitle\": \"Sub-judul Halaman\",\n" +
+      "  \"heroBanner\": {\n" +
+      "    \"title\": \"Copywriting Utama Hero Banner\",\n" +
+      "    \"subtitle\": \"Copywriting Pendukung Hero Banner\",\n" +
+      "    \"ctaText\": \"Teks Tombol Aksi\",\n" +
+      "    \"imageConcept\": \"Konsep visual gambar yang direkomendasikan\"\n" +
+      "  },\n" +
+      "  \"sections\": [\n" +
+      "    { \"title\": \"Judul Seksi 1\", \"content\": \"Konten lengkap Seksi 1\" },\n" +
+      "    { \"title\": \"Judul Seksi 2\", \"content\": \"Konten lengkap Seksi 2\" }\n" +
+      "  ],\n" +
+      "  \"faqs\": [\n" +
+      "    { \"q\": \"Pertanyaan FAQ 1\", \"a\": \"Jawaban FAQ 1\" },\n" +
+      "    { \"q\": \"Pertanyaan FAQ 2\", \"a\": \"Jawaban FAQ 2\" }\n" +
+      "  ],\n" +
+      "  \"seo\": {\n" +
+      "    \"metaTitle\": \"Judul SEO Meta Tag\",\n" +
+      "    \"metaDescription\": \"Deskripsi SEO Meta Tag\",\n" +
+      "    \"keywords\": \"kata-kunci, seo, pencarian\",\n" +
+      "    \"schemaMarkup\": \"JSON-LD Schema Markup String\"\n" +
+      "  },\n" +
+      "  \"colorPalette\": {\n" +
+      "    \"primary\": \"#0050A0\",\n" +
+      "    \"secondary\": \"#002f5a\",\n" +
+      "    \"accent\": \"#D4AF37\"\n" +
+      "  }\n" +
+      "}\n\n" +
+      "Tulis dalam Bahasa Indonesia dengan gaya bahasa industri perhotelan, pariwisata, kuliner, dan pendidikan vokasi tinggi yang elegan, modern, dan tulus (tanpa cliché kecerdasan buatan).";
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: `Buat halaman DXP baru berdasarkan instruksi: "${prompt}"`,
+      config: {
+        systemInstruction: systemInstruction,
+        temperature: 0.75,
+        responseMimeType: "application/json"
+      }
+    });
+
+    let rawText = response.text || "{}";
+    let cleanJson = rawText.trim();
+    if (cleanJson.startsWith("```")) {
+      cleanJson = cleanJson.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+    }
+    const result = JSON.parse(cleanJson);
+    res.json(result);
+  } catch (error: any) {
+    console.error("Kesalahan API AI Studio:", error);
+    res.status(500).json({ error: error.message || "Gagal menghasilkan halaman via AI Studio." });
+  }
+});
+
 // Vite Middleware integration for Full-Stack structure
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

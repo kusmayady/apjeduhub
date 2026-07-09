@@ -906,7 +906,7 @@ export default function HomeView({ onNavigate, onSelectArticle, currentLang }: H
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* D3 Perhotelan Card */}
             <div className="bg-white rounded-2xl shadow-xl border border-neutral-100 overflow-hidden flex flex-col hover:-translate-y-1.5 transition duration-300">
-              <div className="h-48 relative">
+              <div className="h-48 relative shrink-0">
                 <img
                   src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=500"
                   alt="D3 Perhotelan"
@@ -945,7 +945,7 @@ export default function HomeView({ onNavigate, onSelectArticle, currentLang }: H
 
             {/* D3 Usaha Perjalanan Wisata */}
             <div className="bg-white rounded-2xl shadow-xl border border-neutral-100 overflow-hidden flex flex-col hover:-translate-y-1.5 transition duration-300">
-              <div className="h-48 relative">
+              <div className="h-48 relative shrink-0">
                 <img
                   src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?auto=format&fit=crop&q=80&w=500"
                   alt="Usaha Perjalanan Wisata"
@@ -1014,7 +1014,7 @@ export default function HomeView({ onNavigate, onSelectArticle, currentLang }: H
               className="bg-white rounded-xl shadow-md border border-neutral-100 overflow-hidden flex flex-col justify-between group cursor-pointer hover:shadow-lg transition animate-fade-in"
             >
               <div>
-                <div className="h-44 relative overflow-hidden">
+                <div className="h-44 relative overflow-hidden shrink-0">
                   <img
                     src={item.image}
                     alt={item.title}

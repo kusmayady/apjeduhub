@@ -398,7 +398,7 @@ export async function seedDatabaseIfEmpty() {
     console.error("Error seeding board members: ", error);
   }
 
-  // --- Seed Joomla default template styles ---
+  // --- Seed EduHub default template styles ---
   try {
     const templatesQuery = query(collection(db, COL_TEMPLATE_STYLES));
     const querySnapshot = await getDocs(templatesQuery);
@@ -413,7 +413,7 @@ export async function seedDatabaseIfEmpty() {
     console.warn("Seeding Firestore template styles failed:", e);
   }
 
-  // --- Seed Joomla default menu items ---
+  // --- Seed EduHub default menu items ---
   try {
     const menusQuery = query(collection(db, COL_MENU_ITEMS));
     const querySnapshot = await getDocs(menusQuery);
@@ -480,7 +480,7 @@ export const DEFAULT_TEMPLATE_STYLES: DbTemplateStyle[] = [
   },
   {
     id: "tpl-sand",
-    name: "Joomla Terracotta Sand",
+    name: "EduHub Terracotta Sand",
     primaryColor: "#7c2d12",
     secondaryColor: "#ea580c",
     accentColor: "#fbbf24",

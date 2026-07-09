@@ -43,6 +43,7 @@ import {
   DbMenuItem
 } from "../lib/dbService";
 import { EduFin } from "./EduFin";
+import ApjCmsWorkspaces from "./ApjCmsWorkspaces";
 import { 
   Lock, 
   User, 
@@ -253,26 +254,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
   const [joomlaTemplates, setJoomlaTemplates] = useState<DbTemplateStyle[]>([]);
 
   // Joomla CMS Advanced State variables
-  const [joomlaSubTab, setJoomlaSubTab] = useState<
-    | "dashboard"
-    | "content"
-    | "category_manager"
-    | "menus"
-    | "menu_items"
-    | "module_manager"
-    | "template_manager"
-    | "media_library"
-    | "forms"
-    | "components"
-    | "extensions"
-    | "seo"
-    | "users"
-    | "ai_assistant"
-    | "reports"
-    | "settings"
-    | "system"
-    | "help"
-  >("dashboard");
+  const [joomlaSubTab, setJoomlaSubTab] = useState<string>("dashboard");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [joomlaSearchQuery, setJoomlaSearchQuery] = useState("");
   const [joomlaSiteFilter, setJoomlaSiteFilter] = useState<"site" | "admin">("site");
@@ -2646,7 +2628,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {announcements.map((ann) => (
                   <div key={ann.id} className="bg-white rounded-2xl border shadow-sm overflow-hidden flex flex-col justify-between">
-                    <div className="relative">
+                    <div className="relative shrink-0">
                       <img 
                         src={ann.image} 
                         alt="Kabar Cover" 
@@ -3261,29 +3243,29 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
             <div className="bg-neutral-100 border border-neutral-200 rounded-3xl overflow-hidden shadow-sm font-sans flex flex-col md:flex-row min-h-[680px]">
               {/* JOOMLA LEFT SIDEBAR */}
               <div 
-                className={`bg-[#1a2d40] text-slate-300 transition-all duration-300 flex flex-col justify-between shrink-0 ${
+                className={`bg-[#f8fafc] border-r border-slate-200/80 text-slate-700 transition-all duration-300 flex flex-col justify-between shrink-0 ${
                   isSidebarCollapsed ? "w-16" : "w-64"
                 }`}
               >
                 <div>
                   {/* Sidebar Brand Header */}
-                  <div className="p-4 border-b border-neutral-700/50 flex items-center justify-between bg-[#142332]">
+                  <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white">
                     {!isSidebarCollapsed ? (
                       <div className="flex items-center gap-2">
                         {/* Joomla emblem square-grid logo */}
-                        <div className="grid grid-cols-2 gap-0.5 w-6 h-6 shrink-0 animate-pulse">
+                        <div className="grid grid-cols-2 gap-0.5 w-5 h-5 shrink-0">
                           <div className="bg-red-500 rounded-sm"></div>
                           <div className="bg-blue-500 rounded-sm"></div>
                           <div className="bg-yellow-500 rounded-sm"></div>
                           <div className="bg-emerald-500 rounded-sm"></div>
                         </div>
                         <div>
-                          <span className="font-extrabold text-white tracking-tight text-xs block uppercase">Joomla! CMS</span>
-                          <span className="text-[8px] text-slate-400 block font-semibold">APJ Portal Console v6.1</span>
+                          <span className="font-black text-slate-900 tracking-tight text-xs block uppercase">EduHub CMS</span>
+                          <span className="text-[8px] text-slate-500 block font-semibold">APJ Portal Console v6.1</span>
                         </div>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-0.5 w-6 h-6 mx-auto">
+                      <div className="grid grid-cols-2 gap-0.5 w-5 h-5 mx-auto">
                         <div className="bg-red-500 rounded-xs"></div>
                         <div className="bg-blue-500 rounded-xs"></div>
                         <div className="bg-yellow-500 rounded-xs"></div>
@@ -3292,7 +3274,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                     )}
                     <button 
                       onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                      className="p-1 hover:bg-neutral-700/60 rounded text-slate-400 hover:text-white transition cursor-pointer"
+                      className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-900 transition cursor-pointer"
                       title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                     >
                       <Layout size={14} />
@@ -3303,51 +3285,57 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                   <div className="py-2 px-1.5 space-y-3 overflow-y-auto max-h-[580px]">
                     {[
                       {
-                        group: "Utama",
+                        group: "Pusat Informasi & Media",
                         items: [
-                          { id: "dashboard", label: "🏠 Home Dashboard", icon: Layers }
+                          { id: "dashboard", label: "Home Dashboard", icon: Layers },
+                          { id: "content", label: "Artikel Berita", icon: FileText, badge: announcements.length },
+                          { id: "media_library", label: "Media & DAM Assets", icon: Image }
                         ]
                       },
                       {
-                        group: "Content & Assets",
+                        group: "Akademik & PMB",
                         items: [
-                          { id: "content", label: "📄 Artikel Berita", icon: FileText, badge: announcements.length },
-                          { id: "category_manager", label: "📂 Kategori Manager", icon: FolderOpen, badge: joomlaCategories.length },
-                          { id: "media_library", label: "🖼 Media Library", icon: Image, badge: joomlaMedia.length },
-                          { id: "forms", label: "📋 Inbox Form", icon: CheckSquare, badge: joomlaForms.length }
+                          { id: "academics", label: "Akademik & Prodi", icon: GraduationCap },
+                          { id: "pmb", label: "PMB Campaign", icon: Layout },
+                          { id: "directory", label: "Direktori Dosen", icon: Users },
+                          { id: "download_center", label: "Download Center", icon: FolderOpen }
                         ]
                       },
                       {
-                        group: "Menus & Layout",
+                        group: "Tri Dharma & Standar",
                         items: [
-                          { id: "menus", label: "🧭 Menu Groups", icon: Menu, badge: joomlaMenuGroups.length },
-                          { id: "menu_items", label: "🔗 All Menu Items", icon: Link2, badge: joomlaMenus.length },
-                          { id: "module_manager", label: "🧩 Module Manager", icon: Puzzle, badge: joomlaModules.length },
-                          { id: "template_manager", label: "🎨 Template Style", icon: Palette, badge: joomlaTemplates.length }
+                          { id: "research", label: "Pusat Riset", icon: Puzzle },
+                          { id: "community_service", label: "Pengabdian Masy.", icon: Users },
+                          { id: "accreditation", label: "Borang Akreditasi", icon: CheckSquare },
+                          { id: "spmi", label: "SPMI Quality", icon: CheckSquare }
                         ]
                       },
                       {
-                        group: "Core Systems",
+                        group: "Alumni & Kerjasama",
                         items: [
-                          { id: "components", label: "🏛 Components / Fitur", icon: Sparkles, badge: joomlaComponents.filter(c => c.state === "Active").length },
-                          { id: "extensions", label: "🔌 Plugin Extensions", icon: Briefcase },
-                          { id: "users", label: "👥 Users & RBAC Matrix", icon: Users }
+                          { id: "international_office", label: "International Office", icon: Layers },
+                          { id: "partnership", label: "Partnership MoU", icon: Link2 },
+                          { id: "career_center", label: "Karir & Tracer", icon: Briefcase },
+                          { id: "events", label: "Agenda Kegiatan", icon: Calendar }
                         ]
                       },
                       {
-                        group: "Smart & Analytics",
+                        group: "Smart DXP Engine",
                         items: [
-                          { id: "ai_assistant", label: "🤖 AI Assistant Suite", icon: Bot },
-                          { id: "seo", label: "🔍 SEO Optimization", icon: Search },
-                          { id: "reports", label: "📊 Reports & Traffic", icon: TrendingUp }
+                          { id: "ai_studio", label: "AI Studio DXP", icon: Bot },
+                          { id: "experience_builder", label: "Experience Builder", icon: Sliders },
+                          { id: "workflow", label: "Workflow Engine", icon: Sliders },
+                          { id: "automation", label: "Automation Trigger", icon: Cpu }
                         ]
                       },
                       {
-                        group: "System & Settings",
+                        group: "Sistem & Pengaturan",
                         items: [
-                          { id: "settings", label: "⚙ Settings Global", icon: Sliders },
-                          { id: "system", label: "🖥 System Maintenance", icon: Cpu },
-                          { id: "help", label: "❓ Help Manual", icon: HelpCircle }
+                          { id: "analytics", label: "Traffic Analytics", icon: TrendingUp },
+                          { id: "integrations", label: "Integrasi API", icon: Sliders },
+                          { id: "brand_center", label: "Brand Center", icon: Palette },
+                          { id: "marketplace", label: "Marketplace Apps", icon: Briefcase },
+                          { id: "multisite", label: "Multi-Site Manager", icon: Layout }
                         ]
                       }
                     ].map((section, idx) => {
@@ -3356,11 +3344,15 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       return (
                         <div key={section.group || idx} className="space-y-1">
                           {!isSidebarCollapsed && (
-                            <span className="px-3 text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                            <span className="px-2 text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">
                               {section.group}
                             </span>
                           )}
-                          <div className="space-y-0.5">
+                          <div className={`space-y-0.5 ${
+                            !isSidebarCollapsed 
+                              ? "bg-slate-100/60 p-1 rounded-xl border border-slate-200/50" 
+                              : ""
+                          }`}>
                             {visibleItems.map(item => {
                               const isActive = joomlaSubTab === item.id;
                               const IconComponent = item.icon;
@@ -3373,20 +3365,20 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                                       setJoomlaSearchQuery("");
                                     }
                                   }}
-                                  className={`w-full py-1.5 px-3 rounded-lg text-[10px] font-bold flex items-center gap-2 transition cursor-pointer ${
+                                  className={`w-full py-1.5 px-2.5 rounded-lg text-[10px] font-bold flex items-center gap-2 transition cursor-pointer ${
                                     isActive 
-                                      ? "bg-[#0f1b27] text-white shadow-inner border border-neutral-700/30 font-black" 
-                                      : "hover:bg-[#1f3348] text-slate-300 hover:text-white"
+                                      ? "bg-white text-slate-900 border border-slate-200 shadow-xs font-extrabold" 
+                                      : "hover:bg-white/60 text-slate-600 hover:text-slate-900"
                                   }`}
                                   title={item.label}
                                 >
-                                  <IconComponent size={13} className={isActive ? "text-amber-400" : "text-slate-400"} />
+                                  <IconComponent size={12} className={isActive ? "text-[#0050A0]" : "text-slate-400"} />
                                   {!isSidebarCollapsed && (
                                     <div className="flex-grow flex items-center justify-between truncate">
                                       <span className="truncate">{item.label}</span>
                                       {"badge" in item && item.badge !== undefined && (
                                         <span className={`text-[8px] font-black px-1.5 py-0.2 rounded-full ${
-                                          isActive ? "bg-amber-400 text-neutral-900" : "bg-[#2d4356] text-slate-200"
+                                          isActive ? "bg-blue-100 text-blue-900" : "bg-slate-200/60 text-slate-600 border border-slate-200/40"
                                         }`}>
                                           {item.badge}
                                         </span>
@@ -3405,8 +3397,8 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
 
                 {/* Sidebar Footer */}
                 {!isSidebarCollapsed && (
-                  <div className="p-3 bg-[#111f2c] border-t border-neutral-700/30 text-[9px] text-slate-400 space-y-1">
-                    <p className="font-extrabold text-slate-300">Database: Cloud Firestore</p>
+                  <div className="p-3 bg-white border-t border-slate-200 text-[9px] text-slate-500 space-y-1">
+                    <p className="font-bold text-slate-700">Database: Cloud Firestore</p>
                     <div className="flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                       <span>Firebase Connected (Live)</span>
@@ -3566,7 +3558,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                     </button>
 
                     <button 
-                      onClick={() => alert("Panduan Joomla CMS: Kelola link Header di 'All Menu Items'. Gunakan 'Menus' untuk membuat kategori menu, dan 'Modules' untuk mengatur widget. Perubahan langsung terupdate ke website!")}
+                      onClick={() => alert("Panduan EduHub CMS: Kelola link Header di 'All Menu Items'. Gunakan 'Menus' untuk membuat kategori menu, dan 'Modules' untuk mengatur widget. Perubahan langsung terupdate ke website!")}
                       className="bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-700 text-[10px] font-extrabold px-3.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-xs cursor-pointer"
                     >
                       ❓ Help
@@ -3586,14 +3578,24 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                   </div>
                 </div>
 
-                {/* JOOMLA CMS WORKSPACE RENDER PANEL */}
+                {/* EDUHUB CMS WORKSPACE RENDER PANEL */}
                 <div className="bg-white rounded-3xl border border-neutral-200 p-5 shadow-sm min-h-[420px] flex flex-col justify-between">
-                  
-                  {/* SUBTAB 1: HOME DASHBOARD */}
-                  {joomlaSubTab === "dashboard" && (
+                  <ApjCmsWorkspaces 
+                    tab={joomlaSubTab}
+                    announcements={announcements}
+                    setAnnouncements={setAnnouncements}
+                    settings={settings}
+                    setSettings={setSettings}
+                    pmbApplicants={pmbApplicants}
+                    messages={messages}
+                  />
+                  {false && (
+                    <>
+                      {/* SUBTAB 1: HOME DASHBOARD */}
+                      {joomlaSubTab === "dashboard" && (
                     <div className="space-y-6 animate-fade-in text-neutral-800">
                       <div className="bg-gradient-to-r from-[#0050A0] to-[#002f5a] p-6 rounded-2xl text-white space-y-2 shadow-md">
-                        <div className="text-sm font-black uppercase tracking-wider font-heading text-white">Selamat Datang di Konsol Administrasi Joomla!</div>
+                        <div className="text-sm font-black uppercase tracking-wider font-heading text-white">Selamat Datang di Konsol Administrasi EduHub CMS!</div>
                         <div className="text-[11px] text-blue-100 max-w-2xl leading-relaxed">
                           Anda masuk sebagai pengelola portal **Akademi Pariwisata Jakarta**. Disini Anda memiliki kontrol penuh atas hierarki navigasi, pemetaan template desain, widgets, data akademik, dan persidangan online PMB.
                         </div>
@@ -3607,7 +3609,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Column 1: Quick Icons */}
                         <div className="border border-neutral-100 bg-neutral-50/50 rounded-2xl p-4 space-y-3 shadow-xs">
-                          <span className="block text-[10px] text-neutral-400 uppercase tracking-widest font-black">Akses Cepat Joomla</span>
+                          <span className="block text-[10px] text-neutral-400 uppercase tracking-widest font-black">Akses Cepat EduHub CMS</span>
                           <div className="grid grid-cols-2 gap-2">
                             <button onClick={() => setJoomlaSubTab("menu_items")} className="p-2.5 bg-white border border-neutral-100 hover:border-[#0050A0] rounded-xl hover:shadow-sm text-center transition">
                               <span className="text-lg block">🔗</span>
@@ -4028,7 +4030,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start gap-3">
                         <span className="text-lg">🎨</span>
                         <div className="text-[11px] leading-relaxed text-amber-900">
-                          <strong>Dynamic Module Assignment:</strong> Di Joomla, Anda dapat menetapkan suatu Modul (seperti widget chatbot AI atau banner) hanya pada halaman tertentu. Aktifkan modul dan pilih posisi layoutnya di bawah ini!
+                          <strong>Dynamic Module Assignment:</strong> Di EduHub, Anda dapat menetapkan suatu Modul (seperti widget chatbot AI atau banner) hanya pada halaman tertentu. Aktifkan modul dan pilih posisi layoutnya di bawah ini!
                         </div>
                       </div>
 
@@ -4305,8 +4307,8 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                             </div>
                           </div>
                           <div className="bg-neutral-950 text-slate-300 p-3 rounded-lg text-[9px] max-h-[100px] overflow-y-auto space-y-0.5 leading-normal">
-                            <p className="text-neutral-500">[INFO] 2026-07-07T17:40 - Joomla Database initialization success.</p>
-                            <p className="text-neutral-500">[DB] Loaded 5 menu groups from firestore_BluePrint_joomla_menus</p>
+                            <p className="text-neutral-500">[INFO] 2026-07-07T17:40 - EduHub Database initialization success.</p>
+                            <p className="text-neutral-500">[DB] Loaded 5 menu groups from firestore_BluePrint_eduhub_menus</p>
                             <p className="text-emerald-400">[LIVE] HMR disabled. Running production bundle successfully.</p>
                           </div>
                         </div>
@@ -4611,7 +4613,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                   {joomlaSubTab === "template_manager" && (
                     <div className="space-y-4 animate-fade-in text-neutral-800">
                       <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-[11px] leading-relaxed text-amber-900 font-bold">
-                        🎨 <strong>Joomla! Template Style Customizer:</strong> Mengatur corak warna, radius tombol, & CSS rules universal seluruh halaman publik situs secara realtime tanpa modifikasi file stylesheet!
+                        🎨 <strong>EduHub! Template Style Customizer:</strong> Mengatur corak warna, radius tombol, & CSS rules universal seluruh halaman publik situs secara realtime tanpa modifikasi file stylesheet!
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4683,7 +4685,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                     <div className="space-y-4 animate-fade-in text-neutral-800">
                       <div className="bg-white p-4 border border-neutral-200/80 rounded-2xl shadow-xs flex justify-between items-center">
                         <div>
-                          <span className="text-xs font-black text-neutral-900 block">Joomla! Extensions & Plugins Directory</span>
+                          <span className="text-xs font-black text-neutral-900 block">EduHub Extensions & Plugins Directory</span>
                           <p className="text-[10px] text-neutral-400 mt-0.5">Pasang widget fungsional, fungsional chatbot AI, multitingual, atau security shield.</p>
                         </div>
                         <span className="bg-blue-50 text-blue-700 text-[9px] font-black border border-blue-200 px-2 py-1 rounded-full uppercase">3 Plugins Active</span>
@@ -5098,12 +5100,12 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       <div className="bg-white border p-6 rounded-3xl shadow-xs space-y-4 font-sans">
                         <div>
                           <span className="text-xs font-black text-[#0050A0] uppercase tracking-widest font-heading block">Buku Manual Administrasi Portal APJ</span>
-                          <p className="text-[10px] text-neutral-400 font-bold">Pedoman tata kelola website berbasis Joomla CMS & arsitektur CamVOS.</p>
+                          <p className="text-[10px] text-neutral-400 font-bold">Pedoman tata kelola website berbasis EduHub CMS & arsitektur CamVOS.</p>
                         </div>
 
                         <div className="space-y-3 text-[11px] leading-relaxed text-neutral-600 font-sans font-medium">
                           <p>
-                            Sistem administrasi **APJ Portal Console** ini dirancang dengan mengadopsi kemudahan arsitektur **Joomla CMS**, disesuaikan dengan aturan tata tertib kode **CamVOS Constitution**:
+                            Sistem administrasi **APJ Portal Console** ini dirancang dengan mengadopsi kemudahan arsitektur **EduHub CMS**, disesuaikan dengan aturan tata tertib kode **CamVOS Constitution**:
                           </p>
                           <ol className="list-decimal pl-5 space-y-1 text-neutral-700 font-bold text-xs">
                             <li><strong className="text-neutral-900">API First:</strong> Seluruh item link menu dan rilis berita disinkronisasikan langsung ke Google Cloud Run & Firestore secara live tanpa hardcoding statis.</li>
@@ -5128,7 +5130,9 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       <button className="px-2 py-1 border border-neutral-200 hover:bg-neutral-50 rounded-md disabled:opacity-30" disabled>Selanjutnya</button>
                     </div>
                   </div>
-                </div>
+                </>
+              )}
+            </div>
               </div>
 
               {/* DYNAMIC COMPONENT MODAL: JOOMLA MENU GROUP */}
@@ -5140,7 +5144,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       <h4 className="text-xs font-black uppercase text-[#0050A0] font-heading tracking-wider flex items-center gap-1.5">
                         📂 {editingGroupId ? "Edit Menu Group" : "Tambah Menu Group Baru"}
                       </h4>
-                      <p className="text-[10px] text-neutral-400 font-bold">Menu group bertindak sebagai wadah menu navigasi di Joomla.</p>
+                      <p className="text-[10px] text-neutral-400 font-bold">Menu group bertindak sebagai wadah menu navigasi di EduHub.</p>
                     </div>
                     <form onSubmit={(e) => {
                       e.preventDefault();
@@ -5192,7 +5196,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                     <button onClick={() => setShowModuleModal(false)} className="absolute top-5 right-5 text-neutral-400 hover:text-black border border-neutral-200 p-1 rounded-full cursor-pointer">✕</button>
                     <div>
                       <h4 className="text-xs font-black uppercase text-[#0050A0] font-heading tracking-wider flex items-center gap-1.5">
-                        ⚙ {editingModuleId ? "Edit Joomla Module" : "Buat Modul / Widget Baru"}
+                        ⚙ {editingModuleId ? "Edit EduHub Module" : "Buat Modul / Widget Baru"}
                       </h4>
                       <p className="text-[10px] text-neutral-400 font-bold font-sans">Modul menempatkan widget fungsional pada posisi-posisi layout situs.</p>
                     </div>
@@ -5239,7 +5243,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                           <label className="text-[10px] text-neutral-500 uppercase tracking-widest font-black block">Module Type</label>
                           <select value={moduleType} onChange={(e) => setModuleType(e.target.value)} className="w-full bg-neutral-50 border p-2.5 rounded-xl font-bold text-neutral-700">
                             <option value="Custom HTML">Custom HTML Block</option>
-                            <option value="Menu">Joomla Menu Links</option>
+                            <option value="Menu">EduHub Menu Links</option>
                             <option value="EduFin AI Engine">Dr. EduFin AI Widget</option>
                             <option value="Smart Search">Pencarian Pintar</option>
                           </select>
@@ -5304,7 +5308,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                         {editingMenuId ? "Edit Konfigurasi Menu Link" : "Tambah Item Menu Link Baru"}
                       </h4>
                       <p className="text-[10px] text-neutral-500 font-semibold mt-0.5 font-sans">
-                        Tentukan routing navigasi menu beserta gaya template desain khususnya. Sesuai arsitektur Joomla CMS.
+                        Tentukan routing navigasi menu beserta gaya template desain khususnya. Sesuai arsitektur EduHub CMS.
                       </p>
                     </div>
 
@@ -5440,7 +5444,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm">
                 <div>
                   <h3 className="text-sm font-black text-neutral-900 font-heading">
-                    Manajemen Template Styles (Joomla Dynamic Paint Engine)
+                    Manajemen Template Styles (EduHub Dynamic Paint Engine)
                   </h3>
                   <p className="text-[11px] text-neutral-500 font-semibold leading-relaxed mt-0.5">
                     Modifikasi & buat template baru untuk mengganti warna aksen, font, rounded corners, dan tipe header seluruh portal secara dinamis.
@@ -5699,7 +5703,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                             <option value="rounded-none">Siku Tajam (None)</option>
                             <option value="rounded-md">Rounded Ringkas (Classic)</option>
                             <option value="rounded-xl">Rounded Medium (Bawaan APJ)</option>
-                            <option value="rounded-3xl">Bubbles Besar (Modern Joomla)</option>
+                            <option value="rounded-3xl">Bubbles Besar (Modern EduHub)</option>
                             <option value="rounded-full">Tablet Bulat (Pill)</option>
                           </select>
                         </div>
