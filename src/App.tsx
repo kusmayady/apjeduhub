@@ -14,6 +14,8 @@ import KontakView from "./components/KontakView";
 import AdminView from "./components/AdminView";
 import { seedDatabaseIfEmpty, getWebsiteSettings, WebsiteSettings, AnnouncementItem, DbMenuItem, DbTemplateStyle } from "./lib/dbService";
 import ArtikelDetailView from "./components/ArtikelDetailView";
+import VirtualCounselor from "./components/VirtualCounselor";
+import NewsTicker from "./components/NewsTicker";
 import { GraduationCap, Award, Compass, Building, MapPin, Phone, Mail, Clock } from "lucide-react";
 import { LanguageCode, createTranslator } from "./lib/translations";
 
@@ -37,13 +39,13 @@ export default function App() {
 
   const t = createTranslator(currentLang);
 
-  // Load EduHub Menu Items and Template Styles
+  // Load Joomla Menu Items and Template Styles
   const [menuItems, setMenuItems] = useState<DbMenuItem[]>([]);
   const [templates, setTemplates] = useState<DbTemplateStyle[]>([]);
   const [refreshMenuTrigger, setRefreshMenuTrigger] = useState(0);
 
   useEffect(() => {
-    async function fetchEduHubData() {
+    async function fetchJoomlaData() {
       try {
         const { getMenuItems, getTemplateStyles } = await import("./lib/dbService");
         const items = await getMenuItems();
@@ -51,10 +53,10 @@ export default function App() {
         setMenuItems(items);
         setTemplates(styles);
       } catch (err) {
-        console.warn("Gagal mengambil data menu/template EduHub:", err);
+        console.warn("Gagal mengambil data menu/template Joomla:", err);
       }
     }
-    fetchEduHubData();
+    fetchJoomlaData();
   }, [refreshMenuTrigger, currentSection]);
 
   // Find currently active Menu Item style configuration from templates list
@@ -182,7 +184,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col justify-between text-neutral-800 font-body antialiased transition-colors duration-300" id="main-body-container">
-      {/* EduHub dynamic template stylesheet injection */}
+      {/* Joomla dynamic template stylesheet injection */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Merriweather:wght@300;400;700&family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Saira+Condensed:wght@300;400;500;600;700;800&family=Roboto+Condensed:wght@300;400;700&family=PT+Sans+Narrow:wght@400;700&family=Fira+Sans+Condensed:wght@300;400;500;600;700&display=swap');
 
@@ -272,32 +274,6 @@ export default function App() {
           color: var(--color-accent) !important;
         }
 
-        /* High-contrast and readability overrides for elements with text-white or on dark background containers */
-        .text-white, .text-white p, .text-white h1, .text-white h2, .text-white h3, .text-white h4, .text-white h5, .text-white h6 {
-          color: #ffffff !important;
-        }
-        .text-neutral-100, .text-neutral-100 p, .text-neutral-100 h1, .text-neutral-100 h2, .text-neutral-100 h3, .text-neutral-100 h4 {
-          color: #f5f5f5 !important;
-        }
-        .text-neutral-200, .text-neutral-200 p, .text-neutral-200 h1, .text-neutral-200 h2, .text-neutral-200 h3, .text-neutral-200 h4 {
-          color: #e5e5e5 !important;
-        }
-        .text-neutral-300, .text-neutral-300 p, .text-neutral-300 h1, .text-neutral-300 h2, .text-neutral-300 h3, .text-neutral-300 h4 {
-          color: #d4d4d4 !important;
-        }
-        .text-slate-100, .text-slate-100 p, .text-slate-100 h1, .text-slate-100 h2, .text-slate-100 h3, .text-slate-100 h4 {
-          color: #f1f5f9 !important;
-        }
-        .text-slate-200, .text-slate-200 p, .text-slate-200 h1, .text-slate-200 h2, .text-slate-200 h3, .text-slate-200 h4 {
-          color: #e2e8f0 !important;
-        }
-        .bg-primary p {
-          color: #e2e8f0 !important;
-        }
-        .bg-primary h1, .bg-primary h2, .bg-primary h3, .bg-primary h4, .bg-primary h5, .bg-primary h6 {
-          color: #ffffff !important;
-        }
-
         /* Dynamically repaint primary color classes throughout all UI components */
         .bg-primary {
           background-color: ${activeStyle.primaryColor} !important;
@@ -358,6 +334,14 @@ export default function App() {
         activeStyle={activeStyle}
         currentLang={currentLang}
         onLanguageChange={handleLanguageChange}
+      />
+
+      {/* Scrolling News Ticker for Campus Announcements */}
+      <NewsTicker 
+        currentLang={currentLang} 
+        activeStyle={activeStyle} 
+        onSelectArticle={setSelectedArticle} 
+        onNavigate={handleNavigate} 
       />
 
       {/* Main Dynamic Viewport Frame */}
@@ -509,6 +493,7 @@ export default function App() {
           </div>
         </div>
       </footer>
+      <VirtualCounselor currentLang={currentLang} />
     </div>
   );
 }

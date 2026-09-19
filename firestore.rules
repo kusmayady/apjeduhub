@@ -139,10 +139,5 @@ service cloud.firestore {
     match /joomla_template_styles/{styleId} {
       allow read, write: if true;
     }
-
-    // Joomla Slides
-    match /joomla_slides/{slideId} {
-      allow read, write: if true;
-    }
   }
 }

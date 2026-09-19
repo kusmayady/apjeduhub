@@ -136,21 +136,6 @@
         "badgeStyle": { "type": "string", "description": "Visual form factor of text badges" }
       },
       "required": ["name", "primaryColor", "secondaryColor", "accentColor", "backgroundColor", "fontFamily", "headingFontName", "cardRadius", "headerStyle", "showHeroBackground", "badgeStyle"]
-    },
-    "JoomlaSlide": {
-      "title": "JoomlaSlide",
-      "description": "Customizable homepage banner slides",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string", "description": "Title of the slide banner" },
-        "subtitle": { "type": "string", "description": "Subtitle text for highlighting" },
-        "desc": { "type": "string", "description": "Detailed description copy" },
-        "ctaText": { "type": "string", "description": "Call to action button label" },
-        "imageUrl": { "type": "string", "description": "Optional background image or color reference" },
-        "order": { "type": "number", "description": "Display order weight" },
-        "published": { "type": "boolean", "description": "Active visibility status" }
-      },
-      "required": ["title", "subtitle", "desc", "ctaText", "order", "published"]
     }
   },
   "firestore": {
@@ -189,10 +174,6 @@
     "/joomla_template_styles/{styleId}": {
       "schema": "JoomlaTemplateStyle",
       "description": "Joomla style customizer templates"
-    },
-    "/joomla_slides/{slideId}": {
-      "schema": "JoomlaSlide",
-      "description": "Joomla banner slide carousels"
     }
   }
 }

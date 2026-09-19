@@ -70,7 +70,6 @@ const COL_SETTINGS = "website_settings";
 const COL_BOARD = "board_members";
 export const COL_MENU_ITEMS = "joomla_menu_items";
 export const COL_TEMPLATE_STYLES = "joomla_template_styles";
-export const COL_SLIDES = "joomla_slides";
 
 // --- Deleted IDs Tracking for robust client persistence ---
 function getLocalDeletedIds(collectionName: string): string[] {
@@ -192,18 +191,6 @@ export interface DbTemplateStyle {
   paragraphFontColor?: string;
   paragraphFontSize?: string;
   menuFontFamily?: string;
-
-  titleFontWeight?: string;
-  subtitleFontWeight?: string;
-  h1FontWeight?: string;
-  h2FontWeight?: string;
-  h3FontWeight?: string;
-  h4FontWeight?: string;
-  h5FontWeight?: string;
-  h6FontWeight?: string;
-  textFontWeight?: string;
-  paragraphFontWeight?: string;
-  menuFontWeight?: string;
 }
 
 export interface DbMenuItem {
@@ -398,7 +385,7 @@ export async function seedDatabaseIfEmpty() {
     console.error("Error seeding board members: ", error);
   }
 
-  // --- Seed EduHub default template styles ---
+  // --- Seed Joomla default template styles ---
   try {
     const templatesQuery = query(collection(db, COL_TEMPLATE_STYLES));
     const querySnapshot = await getDocs(templatesQuery);
@@ -413,7 +400,7 @@ export async function seedDatabaseIfEmpty() {
     console.warn("Seeding Firestore template styles failed:", e);
   }
 
-  // --- Seed EduHub default menu items ---
+  // --- Seed Joomla default menu items ---
   try {
     const menusQuery = query(collection(db, COL_MENU_ITEMS));
     const querySnapshot = await getDocs(menusQuery);
@@ -480,7 +467,7 @@ export const DEFAULT_TEMPLATE_STYLES: DbTemplateStyle[] = [
   },
   {
     id: "tpl-sand",
-    name: "EduHub Terracotta Sand",
+    name: "Joomla Terracotta Sand",
     primaryColor: "#7c2d12",
     secondaryColor: "#ea580c",
     accentColor: "#fbbf24",
@@ -1591,160 +1578,5 @@ export async function deleteDbMenuItem(id: string): Promise<void> {
     }
   } catch (error) {
     console.warn("deleteDbMenuItem fail:", error);
-  }
-}
-
-export interface JoomlaSlide {
-  id?: string;
-  title: string;
-  subtitle: string;
-  desc: string;
-  ctaText: string;
-  imageUrl?: string;
-  order: number;
-  published: boolean;
-}
-
-const DEFAULT_SLIDES: JoomlaSlide[] = [
-  {
-    id: "slide-1",
-    title: "Penerimaan Mahasiswa Baru TA 2026/2027",
-    subtitle: "Saatnya Menjadi Profesional & Pemimpin Industri Pariwisata Dunia",
-    desc: "APJ membuka pendaftaran Jalur Reguler, Prestasi Rapor, Beasiswa Unggulan, dan Kelas Praktisi Karyawan. Pendaftaran gelombang kedua sedang berlangsung!",
-    ctaText: "Daftar PMB Sekarang",
-    imageUrl: "",
-    order: 1,
-    published: true
-  },
-  {
-    id: "slide-2",
-    title: "Program Studi D3 Perhotelan & Usaha Wisata",
-    subtitle: "Kurikulum Praktis Internasional Berlisensi BNSP",
-    desc: "Menyediakan pendidikan vokasional terbaik berbasis kompetensi kerja nyata. Siap kerja, siap bersaing di hotel bintang 5 nasional dan mancanegara.",
-    ctaText: "Eksplor Program Studi",
-    imageUrl: "",
-    order: 2,
-    published: true
-  },
-  {
-    id: "slide-3",
-    title: "Peluang Karir & Jaringan Global",
-    subtitle: "Magang Kerja Terarah Selama 6 Bulan",
-    desc: "Disalurkan langsung ke The Ritz-Carlton, JW Marriott, Grand Hyatt, kapal pesiar internasional, serta agen perjalanan pariwisata terkemuka.",
-    ctaText: "Hubungan Kerjasama Karir",
-    imageUrl: "",
-    order: 3,
-    published: true
-  }
-];
-
-function getLocalSlides(): JoomlaSlide[] {
-  try {
-    const data = localStorage.getItem("local_slides");
-    if (!data) {
-      localStorage.setItem("local_slides", JSON.stringify(DEFAULT_SLIDES));
-      return DEFAULT_SLIDES;
-    }
-    return JSON.parse(data);
-  } catch (e) {
-    return DEFAULT_SLIDES;
-  }
-}
-
-function saveLocalSlides(slides: JoomlaSlide[]) {
-  try {
-    localStorage.setItem("local_slides", JSON.stringify(slides));
-  } catch (e) {
-    console.warn(e);
-  }
-}
-
-export async function getJoomlaSlides(): Promise<JoomlaSlide[]> {
-  const deletedIds = getLocalDeletedIds(COL_SLIDES);
-  try {
-    const q = query(collection(db, COL_SLIDES));
-    const snap = await getDocs(q);
-    if (snap.empty) {
-      const local = getLocalSlides();
-      return local.filter(s => !deletedIds.includes(s.id!));
-    }
-    const firestoreList: JoomlaSlide[] = [];
-    snap.forEach(doc => {
-      firestoreList.push({ id: doc.id, ...doc.data() } as JoomlaSlide);
-    });
-    const local = getLocalSlides();
-    const merged = [...firestoreList];
-    local.forEach(loc => {
-      if (!merged.find(m => m.id === loc.id) && !deletedIds.includes(loc.id!)) {
-        merged.push(loc);
-      }
-    });
-    const finalFiltered = merged.filter(s => !deletedIds.includes(s.id!));
-    saveLocalSlides(finalFiltered);
-    return finalFiltered.sort((a, b) => a.order - b.order);
-  } catch (e) {
-    return getLocalSlides().filter(s => !deletedIds.includes(s.id!)).sort((a, b) => a.order - b.order);
-  }
-}
-
-export async function createJoomlaSlide(slide: Omit<JoomlaSlide, "id">): Promise<string> {
-  const tempId = "local-slide-" + Date.now();
-  try {
-    const local = getLocalSlides();
-    const newSlide = { id: tempId, ...slide };
-    local.push(newSlide);
-    local.sort((a, b) => a.order - b.order);
-    saveLocalSlides(local);
-  } catch (e) {
-    console.warn(e);
-  }
-
-  try {
-    const docRef = await addDoc(collection(db, COL_SLIDES), slide);
-    return docRef.id;
-  } catch (error) {
-    console.warn("createJoomlaSlide fail:", error);
-    return tempId;
-  }
-}
-
-export async function updateJoomlaSlide(id: string, updates: Partial<JoomlaSlide>): Promise<void> {
-  try {
-    const local = getLocalSlides();
-    const updated = local.map(s => s.id === id ? { ...s, ...updates } : s);
-    updated.sort((a, b) => a.order - b.order);
-    saveLocalSlides(updated);
-  } catch (e) {
-    console.warn(e);
-  }
-
-  try {
-    if (!id.startsWith("local") && !id.startsWith("slide-")) {
-      const docRef = doc(db, COL_SLIDES, id);
-      await updateDoc(docRef, updates);
-    }
-  } catch (error) {
-    console.warn("updateJoomlaSlide fail:", error);
-  }
-}
-
-export async function deleteJoomlaSlide(id: string): Promise<void> {
-  if (!id) return;
-  addLocalDeletedId(COL_SLIDES, id);
-  try {
-    const local = getLocalSlides();
-    const filtered = local.filter(s => s.id !== id);
-    saveLocalSlides(filtered);
-  } catch (e) {
-    console.warn(e);
-  }
-
-  try {
-    if (!id.startsWith("local") && !id.startsWith("slide-")) {
-      const docRef = doc(db, COL_SLIDES, id);
-      await deleteDoc(docRef);
-    }
-  } catch (error) {
-    console.warn("deleteJoomlaSlide fail:", error);
   }
 }

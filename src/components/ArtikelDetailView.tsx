@@ -214,7 +214,7 @@ export default function ArtikelDetailView({ article, onBack, onNavigateToArticle
                 className="bg-white border border-neutral-200/70 rounded-xl overflow-hidden hover:shadow-md transition cursor-pointer flex flex-col justify-between group"
               >
                 <div>
-                  <div className="h-32 overflow-hidden relative shrink-0">
+                  <div className="h-32 overflow-hidden relative">
                     <img
                       src={rel.image || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=400"}
                       alt={rel.title}

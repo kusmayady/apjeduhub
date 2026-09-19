@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { BookOpen, Award, Users, ChevronRight, ChevronLeft, GraduationCap, Building2, MapPin, Sparkles, Phone, ArrowRight } from "lucide-react";
 import { getAnnouncements, AnnouncementItem } from "../lib/dbService";
 import { LanguageCode } from "../lib/translations";
+import CampusGallery from "./CampusGallery";
+import CampusMap from "./CampusMap";
 
 interface HomeViewProps {
   onNavigate: (section: string, tab: string) => void;
@@ -906,7 +908,7 @@ export default function HomeView({ onNavigate, onSelectArticle, currentLang }: H
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* D3 Perhotelan Card */}
             <div className="bg-white rounded-2xl shadow-xl border border-neutral-100 overflow-hidden flex flex-col hover:-translate-y-1.5 transition duration-300">
-              <div className="h-48 relative shrink-0">
+              <div className="h-48 relative">
                 <img
                   src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=500"
                   alt="D3 Perhotelan"
@@ -945,7 +947,7 @@ export default function HomeView({ onNavigate, onSelectArticle, currentLang }: H
 
             {/* D3 Usaha Perjalanan Wisata */}
             <div className="bg-white rounded-2xl shadow-xl border border-neutral-100 overflow-hidden flex flex-col hover:-translate-y-1.5 transition duration-300">
-              <div className="h-48 relative shrink-0">
+              <div className="h-48 relative">
                 <img
                   src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?auto=format&fit=crop&q=80&w=500"
                   alt="Usaha Perjalanan Wisata"
@@ -985,6 +987,12 @@ export default function HomeView({ onNavigate, onSelectArticle, currentLang }: H
         </div>
       </section>
 
+      {/* Campus Gallery Section */}
+      <CampusGallery currentLang={currentLang} />
+
+      {/* Campus Interactive Map Section */}
+      <CampusMap currentLang={currentLang} />
+
       {/* Latest News & Events */}
       <section className="max-w-7xl mx-auto px-6 py-12 md:py-16 space-y-10">
         <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3 border-b border-neutral-100 pb-5">
@@ -1014,7 +1022,7 @@ export default function HomeView({ onNavigate, onSelectArticle, currentLang }: H
               className="bg-white rounded-xl shadow-md border border-neutral-100 overflow-hidden flex flex-col justify-between group cursor-pointer hover:shadow-lg transition animate-fade-in"
             >
               <div>
-                <div className="h-44 relative overflow-hidden shrink-0">
+                <div className="h-44 relative overflow-hidden">
                   <img
                     src={item.image}
                     alt={item.title}

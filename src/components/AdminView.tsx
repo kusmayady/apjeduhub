@@ -43,7 +43,6 @@ import {
   DbMenuItem
 } from "../lib/dbService";
 import { EduFin } from "./EduFin";
-import ApjCmsWorkspaces from "./ApjCmsWorkspaces";
 import { 
   Lock, 
   User, 
@@ -84,51 +83,6 @@ import {
   Briefcase,
   Menu
 } from "lucide-react";
-
-// Helper functions for date picker conversions (Indonesian <-> ISO YYYY-MM-DD)
-function indonesianToISODate(indoDateStr: string): string {
-  if (!indoDateStr) return new Date().toISOString().split('T')[0];
-  if (/^\d{4}-\d{2}-\d{2}$/.test(indoDateStr)) return indoDateStr;
-
-  const months = [
-    "januari", "februari", "maret", "april", "mei", "juni",
-    "juli", "agustus", "september", "oktober", "november", "desember"
-  ];
-  
-  const parts = indoDateStr.toLowerCase().trim().split(/\s+/);
-  if (parts.length === 3) {
-    const day = parts[0].padStart(2, '0');
-    const monthIndex = months.indexOf(parts[1]);
-    const year = parts[2];
-    if (monthIndex !== -1 && /^\d{4}$/.test(year) && /^\d{1,2}$/.test(day)) {
-      const month = String(monthIndex + 1).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-  }
-  
-  try {
-    const d = new Date(indoDateStr);
-    if (!isNaN(d.getTime())) {
-      return d.toISOString().split('T')[0];
-    }
-  } catch (e) {}
-
-  return new Date().toISOString().split('T')[0];
-}
-
-function isoToIndonesianDate(isoDateStr: string): string {
-  if (!isoDateStr) return "";
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDateStr)) {
-    return isoDateStr;
-  }
-  const months = [
-    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-  ];
-  const [year, month, day] = isoDateStr.split('-');
-  const monthName = months[parseInt(month, 10) - 1] || month;
-  return `${parseInt(day, 10)} ${monthName} ${year}`;
-}
 
 // Helper component for file upload of header, footer and favicon
 function FileUploadField({ 
@@ -283,7 +237,6 @@ function FontSelectorPills({
 }
 
 export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => void }) {
-  const annFormRef = React.useRef<HTMLDivElement>(null);
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
@@ -300,7 +253,26 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
   const [joomlaTemplates, setJoomlaTemplates] = useState<DbTemplateStyle[]>([]);
 
   // Joomla CMS Advanced State variables
-  const [joomlaSubTab, setJoomlaSubTab] = useState<string>("dashboard");
+  const [joomlaSubTab, setJoomlaSubTab] = useState<
+    | "dashboard"
+    | "content"
+    | "category_manager"
+    | "menus"
+    | "menu_items"
+    | "module_manager"
+    | "template_manager"
+    | "media_library"
+    | "forms"
+    | "components"
+    | "extensions"
+    | "seo"
+    | "users"
+    | "ai_assistant"
+    | "reports"
+    | "settings"
+    | "system"
+    | "help"
+  >("dashboard");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [joomlaSearchQuery, setJoomlaSearchQuery] = useState("");
   const [joomlaSiteFilter, setJoomlaSiteFilter] = useState<"site" | "admin">("site");
@@ -690,55 +662,43 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
   const [tplTitleFontFamily, setTplTitleFontFamily] = useState("Montserrat");
   const [tplTitleFontColor, setTplTitleFontColor] = useState("#002f5a");
   const [tplTitleFontSize, setTplTitleFontSize] = useState("2.5rem");
-  const [tplTitleFontWeight, setTplTitleFontWeight] = useState("Bold");
 
   const [tplSubtitleFontFamily, setTplSubtitleFontFamily] = useState("Plus Jakarta Sans");
   const [tplSubtitleFontColor, setTplSubtitleFontColor] = useState("#475569");
   const [tplSubtitleFontSize, setTplSubtitleFontSize] = useState("1.25rem");
-  const [tplSubtitleFontWeight, setTplSubtitleFontWeight] = useState("Medium");
 
   const [tplH1FontFamily, setTplH1FontFamily] = useState("Poppins");
   const [tplH1FontColor, setTplH1FontColor] = useState("#002f5a");
   const [tplH1FontSize, setTplH1FontSize] = useState("2.25rem");
-  const [tplH1FontWeight, setTplH1FontWeight] = useState("Bold");
 
   const [tplH2FontFamily, setTplH2FontFamily] = useState("Poppins");
   const [tplH2FontColor, setTplH2FontColor] = useState("#002f5a");
   const [tplH2FontSize, setTplH2FontSize] = useState("1.875rem");
-  const [tplH2FontWeight, setTplH2FontWeight] = useState("Bold");
 
   const [tplH3FontFamily, setTplH3FontFamily] = useState("Poppins");
   const [tplH3FontColor, setTplH3FontColor] = useState("#002f5a");
   const [tplH3FontSize, setTplH3FontSize] = useState("1.5rem");
-  const [tplH3FontWeight, setTplH3FontWeight] = useState("Bold");
 
   const [tplH4FontFamily, setTplH4FontFamily] = useState("Poppins");
   const [tplH4FontColor, setTplH4FontColor] = useState("#002f5a");
   const [tplH4FontSize, setTplH4FontSize] = useState("1.25rem");
-  const [tplH4FontWeight, setTplH4FontWeight] = useState("Bold");
 
   const [tplH5FontFamily, setTplH5FontFamily] = useState("Poppins");
   const [tplH5FontColor, setTplH5FontColor] = useState("#1e3a8a");
   const [tplH5FontSize, setTplH5FontSize] = useState("1.125rem");
-  const [tplH5FontWeight, setTplH5FontWeight] = useState("Bold");
 
   const [tplH6FontFamily, setTplH6FontFamily] = useState("Poppins");
   const [tplH6FontColor, setTplH6FontColor] = useState("#1e3a8a");
   const [tplH6FontSize, setTplH6FontSize] = useState("1rem");
-  const [tplH6FontWeight, setTplH6FontWeight] = useState("Bold");
 
   const [tplTextFontFamily, setTplTextFontFamily] = useState("Plus Jakarta Sans");
   const [tplTextFontColor, setTplTextFontColor] = useState("#1e293b");
   const [tplTextFontSize, setTplTextFontSize] = useState("0.875rem");
-  const [tplTextFontWeight, setTplTextFontWeight] = useState("Regular");
 
   const [tplParagraphFontFamily, setTplParagraphFontFamily] = useState("Plus Jakarta Sans");
   const [tplParagraphFontColor, setTplParagraphFontColor] = useState("#334155");
   const [tplParagraphFontSize, setTplParagraphFontSize] = useState("0.875rem");
-  const [tplParagraphFontWeight, setTplParagraphFontWeight] = useState("Regular");
-  
   const [tplMenuFontFamily, setTplMenuFontFamily] = useState("Arial Nova");
-  const [tplMenuFontWeight, setTplMenuFontWeight] = useState("Semi Bold");
 
   // Feedback notifications
   const [successMsg, setSuccessMsg] = useState("");
@@ -1023,54 +983,43 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
       setTplTitleFontFamily(tpl.titleFontFamily || "Montserrat");
       setTplTitleFontColor(tpl.titleFontColor || tpl.primaryColor);
       setTplTitleFontSize(tpl.titleFontSize || "2.5rem");
-      setTplTitleFontWeight(tpl.titleFontWeight || "Bold");
 
       setTplSubtitleFontFamily(tpl.subtitleFontFamily || "Plus Jakarta Sans");
       setTplSubtitleFontColor(tpl.subtitleFontColor || "#475569");
       setTplSubtitleFontSize(tpl.subtitleFontSize || "1.25rem");
-      setTplSubtitleFontWeight(tpl.subtitleFontWeight || "Medium");
 
       setTplH1FontFamily(tpl.h1FontFamily || "Poppins");
       setTplH1FontColor(tpl.h1FontColor || tpl.primaryColor);
       setTplH1FontSize(tpl.h1FontSize || "2.25rem");
-      setTplH1FontWeight(tpl.h1FontWeight || "Bold");
 
       setTplH2FontFamily(tpl.h2FontFamily || "Poppins");
       setTplH2FontColor(tpl.h2FontColor || tpl.primaryColor);
       setTplH2FontSize(tpl.h2FontSize || "1.875rem");
-      setTplH2FontWeight(tpl.h2FontWeight || "Bold");
 
       setTplH3FontFamily(tpl.h3FontFamily || "Poppins");
       setTplH3FontColor(tpl.h3FontColor || tpl.primaryColor);
       setTplH3FontSize(tpl.h3FontSize || "1.5rem");
-      setTplH3FontWeight(tpl.h3FontWeight || "Bold");
 
       setTplH4FontFamily(tpl.h4FontFamily || "Poppins");
       setTplH4FontColor(tpl.h4FontColor || tpl.primaryColor);
       setTplH4FontSize(tpl.h4FontSize || "1.25rem");
-      setTplH4FontWeight(tpl.h4FontWeight || "Bold");
 
       setTplH5FontFamily(tpl.h5FontFamily || "Poppins");
       setTplH5FontColor(tpl.h5FontColor || tpl.secondaryColor);
       setTplH5FontSize(tpl.h5FontSize || "1.125rem");
-      setTplH5FontWeight(tpl.h5FontWeight || "Bold");
 
       setTplH6FontFamily(tpl.h6FontFamily || "Poppins");
       setTplH6FontColor(tpl.h6FontColor || tpl.secondaryColor);
       setTplH6FontSize(tpl.h6FontSize || "1rem");
-      setTplH6FontWeight(tpl.h6FontWeight || "Bold");
 
       setTplTextFontFamily(tpl.textFontFamily || "Plus Jakarta Sans");
       setTplTextFontColor(tpl.textFontColor || "#1e293b");
       setTplTextFontSize(tpl.textFontSize || "0.875rem");
-      setTplTextFontWeight(tpl.textFontWeight || "Regular");
 
       setTplParagraphFontFamily(tpl.paragraphFontFamily || "Plus Jakarta Sans");
       setTplParagraphFontColor(tpl.paragraphFontColor || "#334155");
       setTplParagraphFontSize(tpl.paragraphFontSize || "0.875rem");
-      setTplParagraphFontWeight(tpl.paragraphFontWeight || "Regular");
       setTplMenuFontFamily(tpl.menuFontFamily || "Arial Nova");
-      setTplMenuFontWeight(tpl.menuFontWeight || "Semi Bold");
     } else {
       setEditingTemplateId(null);
       setTplName("");
@@ -1092,54 +1041,43 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
       setTplTitleFontFamily("Montserrat");
       setTplTitleFontColor("#0050A0");
       setTplTitleFontSize("2.5rem");
-      setTplTitleFontWeight("Bold");
 
       setTplSubtitleFontFamily("Plus Jakarta Sans");
       setTplSubtitleFontColor("#475569");
       setTplSubtitleFontSize("1.25rem");
-      setTplSubtitleFontWeight("Medium");
 
       setTplH1FontFamily("Poppins");
       setTplH1FontColor("#0050A0");
       setTplH1FontSize("2.25rem");
-      setTplH1FontWeight("Bold");
 
       setTplH2FontFamily("Poppins");
       setTplH2FontColor("#0050A0");
       setTplH2FontSize("1.875rem");
-      setTplH2FontWeight("Bold");
 
       setTplH3FontFamily("Poppins");
       setTplH3FontColor("#0050A0");
       setTplH3FontSize("1.5rem");
-      setTplH3FontWeight("Bold");
 
       setTplH4FontFamily("Poppins");
       setTplH4FontColor("#0050A0");
       setTplH4FontSize("1.25rem");
-      setTplH4FontWeight("Bold");
 
       setTplH5FontFamily("Poppins");
       setTplH5FontColor("#00366d");
       setTplH5FontSize("1.125rem");
-      setTplH5FontWeight("Bold");
 
       setTplH6FontFamily("Poppins");
       setTplH6FontColor("#00366d");
       setTplH6FontSize("1rem");
-      setTplH6FontWeight("Bold");
 
       setTplTextFontFamily("Plus Jakarta Sans");
       setTplTextFontColor("#1e293b");
       setTplTextFontSize("0.875rem");
-      setTplTextFontWeight("Regular");
 
       setTplParagraphFontFamily("Plus Jakarta Sans");
       setTplParagraphFontColor("#334155");
       setTplParagraphFontSize("0.875rem");
-      setTplParagraphFontWeight("Regular");
       setTplMenuFontFamily("Arial Nova");
-      setTplMenuFontWeight("Semi Bold");
     }
     setShowTemplateModal(true);
   };
@@ -1546,9 +1484,6 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
     setWHow("");
     
     setShowAnnModal(true);
-    setTimeout(() => {
-      annFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 120);
   };
 
   const handleOpenEditAnn = (ann: AnnouncementItem) => {
@@ -1573,9 +1508,6 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
     setWHow("");
 
     setShowAnnModal(true);
-    setTimeout(() => {
-      annFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 120);
   };
 
   const handleSubmitAnnForm = async (e: React.FormEvent) => {
@@ -1853,7 +1785,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
               }`}
             >
               <Link2 size={14} />
-              Kelola Menu ({joomlaMenus.length})
+              Kelola Menu (Joomla CMS) ({joomlaMenus.length})
             </button>
             <button 
               onClick={() => { setActiveTab("template_manager"); }}
@@ -2209,15 +2141,12 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
 
               {/* Add/Edit Modal */}
               {showAnnModal && (
-                <div ref={annFormRef} className="bg-[#FFFCEF] border border-accent p-6 rounded-3xl max-w-7xl w-full space-y-4 shadow-md animate-fade-in mx-auto">
+                <div className="bg-[#FFFCEF] border border-accent p-6 rounded-3xl max-w-2xl space-y-4 shadow-md animate-fade-in">
                   <h3 className="font-extrabold text-sm text-primary font-heading uppercase tracking-wide flex items-center gap-1.5">
                     {editingAnnId ? <Edit2 size={16} /> : <Plus size={16} />} 
                     {editingAnnId ? "Edit Postingan Pengumuman" : "Buat Baru Postingan Pengumuman"}
                   </h3>
-                  <form onSubmit={handleSubmitAnnForm} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                    {/* Left Column: Form Controls */}
-                    <div className="lg:col-span-7 space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <form onSubmit={handleSubmitAnnForm} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-neutral-500 block uppercase">Kategori Kabar</label>
                       <select 
@@ -2237,10 +2166,11 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-neutral-500 block uppercase">Tanggal Publikasi</label>
                       <input 
-                        type="date"
+                        type="text"
                         required
-                        value={indonesianToISODate(annDate)}
-                        onChange={(e) => setAnnDate(isoToIndonesianDate(e.target.value))}
+                        placeholder="Contoh: 18 Juni 2026"
+                        value={annDate}
+                        onChange={(e) => setAnnDate(e.target.value)}
                         className="w-full bg-white border border-neutral-300 text-xs py-2 px-2.5 rounded-xl focus:ring-1 focus:ring-primary text-neutral-800"
                       />
                     </div>
@@ -2659,98 +2589,21 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                         />
                       </div>
                     </div>
-                    </div>
-                    </div>
 
-                    {/* Right Column: Sticky Live Pre-publish Preview Panel */}
-                    <div className="lg:col-span-5 lg:sticky lg:top-4 bg-white/95 border border-neutral-200/80 p-5 rounded-3xl space-y-4 shadow-sm">
-                      <div className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-xl">
-                        <span className="text-xs">👁️</span>
-                        <span className="font-extrabold text-[10.5px] text-indigo-950 uppercase tracking-wider block">
-                          PRATINJAU LIVE POSTINGAN (SEBELUM PUBLIKASI)
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        {/* 1. Card Layout Preview */}
-                        <div className="space-y-1.5">
-                          <span className="text-[9px] font-bold text-neutral-400 uppercase block">Tampilan Kartu di Beranda</span>
-                          <div className="bg-white rounded-2xl border border-neutral-200/80 shadow-xs overflow-hidden flex flex-col justify-between max-w-full">
-                            <div className="relative shrink-0">
-                              <img 
-                                src={annImage || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=500"} 
-                                alt="Kabar Cover" 
-                                className="w-full h-32 object-cover"
-                              />
-                              <span className="absolute top-2 left-2 bg-primary text-[#FFDCA0] text-[8px] font-black px-2 py-0.5 rounded-sm border border-[#ffca7c]/15">
-                                {annCategory || "Kegiatan Akademik"}
-                              </span>
-                            </div>
-
-                            <div className="p-3.5 space-y-1.5 flex-grow">
-                              <span className="text-[9px] text-neutral-400 font-bold block">{annDate || "Tanggal hari ini"}</span>
-                              <h4 className="font-extrabold text-neutral-900 leading-tight tracking-tight text-[11.5px] line-clamp-2 font-heading">
-                                {annTitle || "Judul Kabar Utama Akan Muncul Di Sini"}
-                              </h4>
-                              <p className="text-[10px] text-zinc-500 font-medium leading-relaxed line-clamp-2">
-                                {annDesc || "Tulis atau potong deskripsi ringkas (lead artikel) untuk pratinjau..."}
-                              </p>
-                            </div>
-                            <div className="p-2 bg-neutral-50 border-t flex justify-between items-center text-[9px] text-neutral-400 font-bold px-3">
-                              <span>Detail Berita</span>
-                              <span>→</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* 2. Full Article View Preview */}
-                        <div className="space-y-1.5">
-                          <span className="text-[9px] font-bold text-neutral-400 uppercase block">Tampilan Detail Artikel Lengkap</span>
-                          <div className="bg-white border border-neutral-200/80 rounded-2xl p-4 space-y-3 overflow-y-auto max-h-[180px] scrollbar-thin">
-                            <div className="space-y-1.5">
-                              <span className="bg-violet-50 text-violet-700 border border-violet-100 text-[8px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded">
-                                {annCategory || "Kegiatan Akademik"}
-                              </span>
-                              <h3 className="font-black text-neutral-950 text-xs tracking-tight leading-tight font-heading">
-                                {annTitle || "Masukkan Judul Artikel Terlebih Dahulu"}
-                              </h3>
-                              <div className="text-[9px] text-neutral-400 font-bold flex gap-2">
-                                <span>📅 {annDate}</span>
-                                <span>•</span>
-                                <span>✍️ Humas APJ</span>
-                              </div>
-                            </div>
-                            <div className="border-t border-neutral-100 pt-2 space-y-2 text-[10.5px] text-neutral-700 leading-relaxed font-medium">
-                              {annContent ? (
-                                annContent.trim().split(/\r?\n/).map((p, idx) => p.trim() && (
-                                  <p key={idx} className="mb-1.5 last:mb-0">
-                                    {p.trim()}
-                                  </p>
-                                ))
-                              ) : (
-                                <p className="text-neutral-400 italic">Belum ada isian detail artikel lengkap. Gunakan asisten AI di atas untuk mengarang otomatis atau ketik manual.</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Modal Action Buttons */}
-                      <div className="flex justify-end gap-2.5 pt-3 border-t border-neutral-150">
-                        <button 
-                          type="button" 
-                          onClick={() => setShowAnnModal(false)}
-                          className="px-4 py-2 bg-neutral-200 text-neutral-700 text-xs font-bold rounded-xl hover:bg-neutral-300 cursor-pointer transition select-none flex-1 text-center"
-                        >
-                          Batal
-                        </button>
-                        <button 
-                          type="submit" 
-                          className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-opacity-90 cursor-pointer transition select-none flex-[2] text-center"
-                        >
-                          {editingAnnId ? "Simpan Pembaruan" : "Publikasikan Sekarang"}
-                        </button>
-                      </div>
+                    <div className="sm:col-span-2 flex justify-end gap-3 pt-2">
+                      <button 
+                        type="button" 
+                        onClick={() => setShowAnnModal(false)}
+                        className="px-3.5 py-1.5 bg-neutral-200 text-neutral-700 text-xs font-bold rounded-xl hover:bg-neutral-300 cursor-pointer transition"
+                      >
+                        Batal
+                      </button>
+                      <button 
+                        type="submit" 
+                        className="px-4 py-1.5 bg-primary text-white text-xs font-bold rounded-xl hover:bg-opacity-90 cursor-pointer transition"
+                      >
+                        {editingAnnId ? "Simpan Pembaruan" : "Publikasikan Sekarang"}
+                      </button>
                     </div>
                   </form>
                 </div>
@@ -2759,7 +2612,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {announcements.map((ann) => (
                   <div key={ann.id} className="bg-white rounded-2xl border shadow-sm overflow-hidden flex flex-col justify-between">
-                    <div className="relative shrink-0">
+                    <div className="relative">
                       <img 
                         src={ann.image} 
                         alt="Kabar Cover" 
@@ -3374,29 +3227,29 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
             <div className="bg-neutral-100 border border-neutral-200 rounded-3xl overflow-hidden shadow-sm font-sans flex flex-col md:flex-row min-h-[680px]">
               {/* JOOMLA LEFT SIDEBAR */}
               <div 
-                className={`bg-[#f8fafc] border-r border-slate-200/80 text-slate-700 transition-all duration-300 flex flex-col justify-between shrink-0 ${
+                className={`bg-[#1a2d40] text-slate-300 transition-all duration-300 flex flex-col justify-between shrink-0 ${
                   isSidebarCollapsed ? "w-16" : "w-64"
                 }`}
               >
                 <div>
                   {/* Sidebar Brand Header */}
-                  <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white">
+                  <div className="p-4 border-b border-neutral-700/50 flex items-center justify-between bg-[#142332]">
                     {!isSidebarCollapsed ? (
                       <div className="flex items-center gap-2">
                         {/* Joomla emblem square-grid logo */}
-                        <div className="grid grid-cols-2 gap-0.5 w-5 h-5 shrink-0">
+                        <div className="grid grid-cols-2 gap-0.5 w-6 h-6 shrink-0 animate-pulse">
                           <div className="bg-red-500 rounded-sm"></div>
                           <div className="bg-blue-500 rounded-sm"></div>
                           <div className="bg-yellow-500 rounded-sm"></div>
                           <div className="bg-emerald-500 rounded-sm"></div>
                         </div>
                         <div>
-                          <span className="font-black text-slate-900 tracking-tight text-xs block uppercase">EduHub CMS</span>
-                          <span className="text-[8px] text-slate-500 block font-semibold">APJ Portal Console v6.1</span>
+                          <span className="font-extrabold text-white tracking-tight text-xs block uppercase">Joomla! CMS</span>
+                          <span className="text-[8px] text-slate-400 block font-semibold">APJ Portal Console v6.1</span>
                         </div>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-0.5 w-5 h-5 mx-auto">
+                      <div className="grid grid-cols-2 gap-0.5 w-6 h-6 mx-auto">
                         <div className="bg-red-500 rounded-xs"></div>
                         <div className="bg-blue-500 rounded-xs"></div>
                         <div className="bg-yellow-500 rounded-xs"></div>
@@ -3405,7 +3258,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                     )}
                     <button 
                       onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                      className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-900 transition cursor-pointer"
+                      className="p-1 hover:bg-neutral-700/60 rounded text-slate-400 hover:text-white transition cursor-pointer"
                       title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                     >
                       <Layout size={14} />
@@ -3416,57 +3269,51 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                   <div className="py-2 px-1.5 space-y-3 overflow-y-auto max-h-[580px]">
                     {[
                       {
-                        group: "Pusat Informasi & Media",
+                        group: "Utama",
                         items: [
-                          { id: "dashboard", label: "Home Dashboard", icon: Layers },
-                          { id: "content", label: "Artikel Berita", icon: FileText, badge: announcements.length },
-                          { id: "media_library", label: "Media & DAM Assets", icon: Image }
+                          { id: "dashboard", label: "🏠 Home Dashboard", icon: Layers }
                         ]
                       },
                       {
-                        group: "Akademik & PMB",
+                        group: "Content & Assets",
                         items: [
-                          { id: "academics", label: "Akademik & Prodi", icon: GraduationCap },
-                          { id: "pmb", label: "PMB Campaign", icon: Layout },
-                          { id: "directory", label: "Direktori Dosen", icon: Users },
-                          { id: "download_center", label: "Download Center", icon: FolderOpen }
+                          { id: "content", label: "📄 Artikel Berita", icon: FileText, badge: announcements.length },
+                          { id: "category_manager", label: "📂 Kategori Manager", icon: FolderOpen, badge: joomlaCategories.length },
+                          { id: "media_library", label: "🖼 Media Library", icon: Image, badge: joomlaMedia.length },
+                          { id: "forms", label: "📋 Inbox Form", icon: CheckSquare, badge: joomlaForms.length }
                         ]
                       },
                       {
-                        group: "Tri Dharma & Standar",
+                        group: "Menus & Layout",
                         items: [
-                          { id: "research", label: "Pusat Riset", icon: Puzzle },
-                          { id: "community_service", label: "Pengabdian Masy.", icon: Users },
-                          { id: "accreditation", label: "Borang Akreditasi", icon: CheckSquare },
-                          { id: "spmi", label: "SPMI Quality", icon: CheckSquare }
+                          { id: "menus", label: "🧭 Menu Groups", icon: Menu, badge: joomlaMenuGroups.length },
+                          { id: "menu_items", label: "🔗 All Menu Items", icon: Link2, badge: joomlaMenus.length },
+                          { id: "module_manager", label: "🧩 Module Manager", icon: Puzzle, badge: joomlaModules.length },
+                          { id: "template_manager", label: "🎨 Template Style", icon: Palette, badge: joomlaTemplates.length }
                         ]
                       },
                       {
-                        group: "Alumni & Kerjasama",
+                        group: "Core Systems",
                         items: [
-                          { id: "international_office", label: "International Office", icon: Layers },
-                          { id: "partnership", label: "Partnership MoU", icon: Link2 },
-                          { id: "career_center", label: "Karir & Tracer", icon: Briefcase },
-                          { id: "events", label: "Agenda Kegiatan", icon: Calendar }
+                          { id: "components", label: "🏛 Components / Fitur", icon: Sparkles, badge: joomlaComponents.filter(c => c.state === "Active").length },
+                          { id: "extensions", label: "🔌 Plugin Extensions", icon: Briefcase },
+                          { id: "users", label: "👥 Users & RBAC Matrix", icon: Users }
                         ]
                       },
                       {
-                        group: "Smart DXP Engine",
+                        group: "Smart & Analytics",
                         items: [
-                          { id: "ai_studio", label: "AI Studio DXP", icon: Bot },
-                          { id: "experience_builder", label: "Experience Builder", icon: Sliders },
-                          { id: "workflow", label: "Workflow Engine", icon: Sliders },
-                          { id: "automation", label: "Automation Trigger", icon: Cpu }
+                          { id: "ai_assistant", label: "🤖 AI Assistant Suite", icon: Bot },
+                          { id: "seo", label: "🔍 SEO Optimization", icon: Search },
+                          { id: "reports", label: "📊 Reports & Traffic", icon: TrendingUp }
                         ]
                       },
                       {
-                        group: "Sistem & Pengaturan",
+                        group: "System & Settings",
                         items: [
-                          { id: "analytics", label: "Traffic Analytics", icon: TrendingUp },
-                          { id: "integrations", label: "Integrasi API", icon: Sliders },
-                          { id: "brand_center", label: "Brand Center", icon: Palette },
-                          { id: "marketplace", label: "Marketplace Apps", icon: Briefcase },
-                          { id: "multisite", label: "Multi-Site Manager", icon: Layout }
+                          { id: "settings", label: "⚙ Settings Global", icon: Sliders },
+                          { id: "system", label: "🖥 System Maintenance", icon: Cpu },
+                          { id: "help", label: "❓ Help Manual", icon: HelpCircle }
                         ]
                       }
                     ].map((section, idx) => {
@@ -3475,15 +3322,11 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       return (
                         <div key={section.group || idx} className="space-y-1">
                           {!isSidebarCollapsed && (
-                            <span className="px-2 text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">
+                            <span className="px-3 text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">
                               {section.group}
                             </span>
                           )}
-                          <div className={`space-y-0.5 ${
-                            !isSidebarCollapsed 
-                              ? "bg-slate-100/60 p-1 rounded-xl border border-slate-200/50" 
-                              : ""
-                          }`}>
+                          <div className="space-y-0.5">
                             {visibleItems.map(item => {
                               const isActive = joomlaSubTab === item.id;
                               const IconComponent = item.icon;
@@ -3496,20 +3339,20 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                                       setJoomlaSearchQuery("");
                                     }
                                   }}
-                                  className={`w-full py-1.5 px-2.5 rounded-lg text-[10px] font-bold flex items-center gap-2 transition cursor-pointer ${
+                                  className={`w-full py-1.5 px-3 rounded-lg text-[10px] font-bold flex items-center gap-2 transition cursor-pointer ${
                                     isActive 
-                                      ? "bg-white text-slate-900 border border-slate-200 shadow-xs font-extrabold" 
-                                      : "hover:bg-white/60 text-slate-600 hover:text-slate-900"
+                                      ? "bg-[#0f1b27] text-white shadow-inner border border-neutral-700/30 font-black" 
+                                      : "hover:bg-[#1f3348] text-slate-300 hover:text-white"
                                   }`}
                                   title={item.label}
                                 >
-                                  <IconComponent size={12} className={isActive ? "text-[#0050A0]" : "text-slate-400"} />
+                                  <IconComponent size={13} className={isActive ? "text-amber-400" : "text-slate-400"} />
                                   {!isSidebarCollapsed && (
                                     <div className="flex-grow flex items-center justify-between truncate">
                                       <span className="truncate">{item.label}</span>
                                       {"badge" in item && item.badge !== undefined && (
                                         <span className={`text-[8px] font-black px-1.5 py-0.2 rounded-full ${
-                                          isActive ? "bg-blue-100 text-blue-900" : "bg-slate-200/60 text-slate-600 border border-slate-200/40"
+                                          isActive ? "bg-amber-400 text-neutral-900" : "bg-[#2d4356] text-slate-200"
                                         }`}>
                                           {item.badge}
                                         </span>
@@ -3528,8 +3371,8 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
 
                 {/* Sidebar Footer */}
                 {!isSidebarCollapsed && (
-                  <div className="p-3 bg-white border-t border-slate-200 text-[9px] text-slate-500 space-y-1">
-                    <p className="font-bold text-slate-700">Database: Cloud Firestore</p>
+                  <div className="p-3 bg-[#111f2c] border-t border-neutral-700/30 text-[9px] text-slate-400 space-y-1">
+                    <p className="font-extrabold text-slate-300">Database: Cloud Firestore</p>
                     <div className="flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                       <span>Firebase Connected (Live)</span>
@@ -3643,7 +3486,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                           setAnnTitle("");
                           setAnnDesc("");
                           setAnnContent("");
-                          setAnnDate(isoToIndonesianDate(new Date().toISOString().split('T')[0]));
+                          setAnnDate(new Date().toISOString().split('T')[0]);
                           setAnnImage("");
                           setShowAnnModal(true);
                         } else {
@@ -3689,7 +3532,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                     </button>
 
                     <button 
-                      onClick={() => alert("Panduan EduHub CMS: Kelola link Header di 'All Menu Items'. Gunakan 'Menus' untuk membuat kategori menu, dan 'Modules' untuk mengatur widget. Perubahan langsung terupdate ke website!")}
+                      onClick={() => alert("Panduan Joomla CMS: Kelola link Header di 'All Menu Items'. Gunakan 'Menus' untuk membuat kategori menu, dan 'Modules' untuk mengatur widget. Perubahan langsung terupdate ke website!")}
                       className="bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-700 text-[10px] font-extrabold px-3.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-xs cursor-pointer"
                     >
                       ❓ Help
@@ -3709,24 +3552,14 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                   </div>
                 </div>
 
-                {/* EDUHUB CMS WORKSPACE RENDER PANEL */}
+                {/* JOOMLA CMS WORKSPACE RENDER PANEL */}
                 <div className="bg-white rounded-3xl border border-neutral-200 p-5 shadow-sm min-h-[420px] flex flex-col justify-between">
-                  <ApjCmsWorkspaces 
-                    tab={joomlaSubTab}
-                    announcements={announcements}
-                    setAnnouncements={setAnnouncements}
-                    settings={settings}
-                    setSettings={setSettings}
-                    pmbApplicants={pmbApplicants}
-                    messages={messages}
-                  />
-                  {false && (
-                    <>
-                      {/* SUBTAB 1: HOME DASHBOARD */}
-                      {joomlaSubTab === "dashboard" && (
+                  
+                  {/* SUBTAB 1: HOME DASHBOARD */}
+                  {joomlaSubTab === "dashboard" && (
                     <div className="space-y-6 animate-fade-in text-neutral-800">
                       <div className="bg-gradient-to-r from-[#0050A0] to-[#002f5a] p-6 rounded-2xl text-white space-y-2 shadow-md">
-                        <div className="text-sm font-black uppercase tracking-wider font-heading text-white">Selamat Datang di Konsol Administrasi EduHub CMS!</div>
+                        <div className="text-sm font-black uppercase tracking-wider font-heading text-white">Selamat Datang di Konsol Administrasi Joomla!</div>
                         <div className="text-[11px] text-blue-100 max-w-2xl leading-relaxed">
                           Anda masuk sebagai pengelola portal **Akademi Pariwisata Jakarta**. Disini Anda memiliki kontrol penuh atas hierarki navigasi, pemetaan template desain, widgets, data akademik, dan persidangan online PMB.
                         </div>
@@ -3740,7 +3573,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Column 1: Quick Icons */}
                         <div className="border border-neutral-100 bg-neutral-50/50 rounded-2xl p-4 space-y-3 shadow-xs">
-                          <span className="block text-[10px] text-neutral-400 uppercase tracking-widest font-black">Akses Cepat EduHub CMS</span>
+                          <span className="block text-[10px] text-neutral-400 uppercase tracking-widest font-black">Akses Cepat Joomla</span>
                           <div className="grid grid-cols-2 gap-2">
                             <button onClick={() => setJoomlaSubTab("menu_items")} className="p-2.5 bg-white border border-neutral-100 hover:border-[#0050A0] rounded-xl hover:shadow-sm text-center transition">
                               <span className="text-lg block">🔗</span>
@@ -4161,7 +3994,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start gap-3">
                         <span className="text-lg">🎨</span>
                         <div className="text-[11px] leading-relaxed text-amber-900">
-                          <strong>Dynamic Module Assignment:</strong> Di EduHub, Anda dapat menetapkan suatu Modul (seperti widget chatbot AI atau banner) hanya pada halaman tertentu. Aktifkan modul dan pilih posisi layoutnya di bawah ini!
+                          <strong>Dynamic Module Assignment:</strong> Di Joomla, Anda dapat menetapkan suatu Modul (seperti widget chatbot AI atau banner) hanya pada halaman tertentu. Aktifkan modul dan pilih posisi layoutnya di bawah ini!
                         </div>
                       </div>
 
@@ -4296,7 +4129,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                               setAnnTitle("");
                               setAnnDesc("");
                               setAnnContent("");
-                              setAnnDate(isoToIndonesianDate(new Date().toISOString().split('T')[0]));
+                              setAnnDate(new Date().toISOString().split('T')[0]);
                               setAnnImage("");
                               setShowAnnModal(true);
                             }}
@@ -4438,8 +4271,8 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                             </div>
                           </div>
                           <div className="bg-neutral-950 text-slate-300 p-3 rounded-lg text-[9px] max-h-[100px] overflow-y-auto space-y-0.5 leading-normal">
-                            <p className="text-neutral-500">[INFO] 2026-07-07T17:40 - EduHub Database initialization success.</p>
-                            <p className="text-neutral-500">[DB] Loaded 5 menu groups from firestore_BluePrint_eduhub_menus</p>
+                            <p className="text-neutral-500">[INFO] 2026-07-07T17:40 - Joomla Database initialization success.</p>
+                            <p className="text-neutral-500">[DB] Loaded 5 menu groups from firestore_BluePrint_joomla_menus</p>
                             <p className="text-emerald-400">[LIVE] HMR disabled. Running production bundle successfully.</p>
                           </div>
                         </div>
@@ -4744,7 +4577,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                   {joomlaSubTab === "template_manager" && (
                     <div className="space-y-4 animate-fade-in text-neutral-800">
                       <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-[11px] leading-relaxed text-amber-900 font-bold">
-                        🎨 <strong>EduHub! Template Style Customizer:</strong> Mengatur corak warna, radius tombol, & CSS rules universal seluruh halaman publik situs secara realtime tanpa modifikasi file stylesheet!
+                        🎨 <strong>Joomla! Template Style Customizer:</strong> Mengatur corak warna, radius tombol, & CSS rules universal seluruh halaman publik situs secara realtime tanpa modifikasi file stylesheet!
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4816,7 +4649,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                     <div className="space-y-4 animate-fade-in text-neutral-800">
                       <div className="bg-white p-4 border border-neutral-200/80 rounded-2xl shadow-xs flex justify-between items-center">
                         <div>
-                          <span className="text-xs font-black text-neutral-900 block">EduHub Extensions & Plugins Directory</span>
+                          <span className="text-xs font-black text-neutral-900 block">Joomla! Extensions & Plugins Directory</span>
                           <p className="text-[10px] text-neutral-400 mt-0.5">Pasang widget fungsional, fungsional chatbot AI, multitingual, atau security shield.</p>
                         </div>
                         <span className="bg-blue-50 text-blue-700 text-[9px] font-black border border-blue-200 px-2 py-1 rounded-full uppercase">3 Plugins Active</span>
@@ -5231,12 +5064,12 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       <div className="bg-white border p-6 rounded-3xl shadow-xs space-y-4 font-sans">
                         <div>
                           <span className="text-xs font-black text-[#0050A0] uppercase tracking-widest font-heading block">Buku Manual Administrasi Portal APJ</span>
-                          <p className="text-[10px] text-neutral-400 font-bold">Pedoman tata kelola website berbasis EduHub CMS & arsitektur CamVOS.</p>
+                          <p className="text-[10px] text-neutral-400 font-bold">Pedoman tata kelola website berbasis Joomla CMS & arsitektur CamVOS.</p>
                         </div>
 
                         <div className="space-y-3 text-[11px] leading-relaxed text-neutral-600 font-sans font-medium">
                           <p>
-                            Sistem administrasi **APJ Portal Console** ini dirancang dengan mengadopsi kemudahan arsitektur **EduHub CMS**, disesuaikan dengan aturan tata tertib kode **CamVOS Constitution**:
+                            Sistem administrasi **APJ Portal Console** ini dirancang dengan mengadopsi kemudahan arsitektur **Joomla CMS**, disesuaikan dengan aturan tata tertib kode **CamVOS Constitution**:
                           </p>
                           <ol className="list-decimal pl-5 space-y-1 text-neutral-700 font-bold text-xs">
                             <li><strong className="text-neutral-900">API First:</strong> Seluruh item link menu dan rilis berita disinkronisasikan langsung ke Google Cloud Run & Firestore secara live tanpa hardcoding statis.</li>
@@ -5261,9 +5094,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       <button className="px-2 py-1 border border-neutral-200 hover:bg-neutral-50 rounded-md disabled:opacity-30" disabled>Selanjutnya</button>
                     </div>
                   </div>
-                </>
-              )}
-            </div>
+                </div>
               </div>
 
               {/* DYNAMIC COMPONENT MODAL: JOOMLA MENU GROUP */}
@@ -5275,7 +5106,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                       <h4 className="text-xs font-black uppercase text-[#0050A0] font-heading tracking-wider flex items-center gap-1.5">
                         📂 {editingGroupId ? "Edit Menu Group" : "Tambah Menu Group Baru"}
                       </h4>
-                      <p className="text-[10px] text-neutral-400 font-bold">Menu group bertindak sebagai wadah menu navigasi di EduHub.</p>
+                      <p className="text-[10px] text-neutral-400 font-bold">Menu group bertindak sebagai wadah menu navigasi di Joomla.</p>
                     </div>
                     <form onSubmit={(e) => {
                       e.preventDefault();
@@ -5327,7 +5158,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                     <button onClick={() => setShowModuleModal(false)} className="absolute top-5 right-5 text-neutral-400 hover:text-black border border-neutral-200 p-1 rounded-full cursor-pointer">✕</button>
                     <div>
                       <h4 className="text-xs font-black uppercase text-[#0050A0] font-heading tracking-wider flex items-center gap-1.5">
-                        ⚙ {editingModuleId ? "Edit EduHub Module" : "Buat Modul / Widget Baru"}
+                        ⚙ {editingModuleId ? "Edit Joomla Module" : "Buat Modul / Widget Baru"}
                       </h4>
                       <p className="text-[10px] text-neutral-400 font-bold font-sans">Modul menempatkan widget fungsional pada posisi-posisi layout situs.</p>
                     </div>
@@ -5374,7 +5205,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                           <label className="text-[10px] text-neutral-500 uppercase tracking-widest font-black block">Module Type</label>
                           <select value={moduleType} onChange={(e) => setModuleType(e.target.value)} className="w-full bg-neutral-50 border p-2.5 rounded-xl font-bold text-neutral-700">
                             <option value="Custom HTML">Custom HTML Block</option>
-                            <option value="Menu">EduHub Menu Links</option>
+                            <option value="Menu">Joomla Menu Links</option>
                             <option value="EduFin AI Engine">Dr. EduFin AI Widget</option>
                             <option value="Smart Search">Pencarian Pintar</option>
                           </select>
@@ -5439,7 +5270,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                         {editingMenuId ? "Edit Konfigurasi Menu Link" : "Tambah Item Menu Link Baru"}
                       </h4>
                       <p className="text-[10px] text-neutral-500 font-semibold mt-0.5 font-sans">
-                        Tentukan routing navigasi menu beserta gaya template desain khususnya. Sesuai arsitektur EduHub CMS.
+                        Tentukan routing navigasi menu beserta gaya template desain khususnya. Sesuai arsitektur Joomla CMS.
                       </p>
                     </div>
 
@@ -5575,7 +5406,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm">
                 <div>
                   <h3 className="text-sm font-black text-neutral-900 font-heading">
-                    Manajemen Template Styles (EduHub Dynamic Paint Engine)
+                    Manajemen Template Styles (Joomla Dynamic Paint Engine)
                   </h3>
                   <p className="text-[11px] text-neutral-500 font-semibold leading-relaxed mt-0.5">
                     Modifikasi & buat template baru untuk mengganti warna aksen, font, rounded corners, dan tipe header seluruh portal secara dinamis.
@@ -5834,7 +5665,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                             <option value="rounded-none">Siku Tajam (None)</option>
                             <option value="rounded-md">Rounded Ringkas (Classic)</option>
                             <option value="rounded-xl">Rounded Medium (Bawaan APJ)</option>
-                            <option value="rounded-3xl">Bubbles Besar (Modern EduHub)</option>
+                            <option value="rounded-3xl">Bubbles Besar (Modern Joomla)</option>
                             <option value="rounded-full">Tablet Bulat (Pill)</option>
                           </select>
                         </div>
