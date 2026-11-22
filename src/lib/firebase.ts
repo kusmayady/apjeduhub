@@ -13,7 +13,8 @@ import {
   orderBy,
   where,
   limit,
-  serverTimestamp
+  serverTimestamp,
+  getDocFromServer
 } from "firebase/firestore";
 import { 
   getAuth, 
@@ -25,20 +26,24 @@ import {
 } from "firebase/auth";
 
 // Firebase App Configuration sourced from workspace environment
-const firebaseConfig = {
-  projectId: "bustling-sweep-b6vd8",
-  appId: "1:729088242560:web:bce16a94fb023c9af7c765",
-  apiKey: "AIzaSyAu-t7yQvSdlHmHhog3OedhnVs0KblMSeM",
-  authDomain: "bustling-sweep-b6vd8.firebaseapp.com",
-  firestoreDatabaseId: "ai-studio-e2a2e56b-0f58-40bc-9a4f-789242f82c99",
-  storageBucket: "bustling-sweep-b6vd8.firebasestorage.app",
-  messagingSenderId: "729088242560"
-};
+import firebaseConfig from "../../firebase-applet-config.json";
 
 // Initialize Firebase services
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 const auth = getAuth(app);
+
+// Validate connection to Firestore
+async function testConnection() {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration.");
+    }
+  }
+}
+testConnection();
 
 export { 
   app, 

@@ -13,6 +13,7 @@ import {
   orderBy,
   serverTimestamp
 } from "./firebase";
+import { isMariaDbActive, mariaFetch } from "./mariaClient";
 
 // --- Error Handler Helper ---
 export enum OperationType {
@@ -340,6 +341,9 @@ const DEFAULT_BOARD_MEMBERS: DbBoardMember[] = [
 
 // --- Seed Database Function ---
 export async function seedDatabaseIfEmpty() {
+  if (await isMariaDbActive()) {
+    return;
+  }
   const settingsDocRef = doc(db, COL_SETTINGS, "general");
   try {
     // Check if website settings exist
@@ -925,6 +929,14 @@ function saveLocalAnnouncements(anns: AnnouncementItem[]) {
 
 // --- PMB Operations ---
 export async function submitPmbApplication(appData: Omit<PmbApplication, "status">): Promise<string> {
+  if (await isMariaDbActive()) {
+    const res = await mariaFetch<{ id: string }>("/pmb", {
+      method: "POST",
+      body: JSON.stringify(appData),
+    });
+    return res.id;
+  }
+
   const fullApp: PmbApplication = {
     ...appData,
     status: "Pending",
@@ -950,6 +962,10 @@ export async function submitPmbApplication(appData: Omit<PmbApplication, "status
 }
 
 export async function getPmbApplications(): Promise<PmbApplication[]> {
+  if (await isMariaDbActive()) {
+    return mariaFetch<PmbApplication[]>("/pmb");
+  }
+
   const deletedIds = getLocalDeletedIds(COL_PMB);
   try {
     const querySnap = await getDocs(query(collection(db, COL_PMB), orderBy("createdAt", "desc")));
@@ -967,6 +983,14 @@ export async function getPmbApplications(): Promise<PmbApplication[]> {
 }
 
 export async function updatePmbApplicationStatus(id: string, status: PmbApplication["status"], notes?: string): Promise<void> {
+  if (await isMariaDbActive()) {
+    await mariaFetch(`/pmb/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, ...(notes !== undefined ? { notes } : {}) }),
+    });
+    return;
+  }
+
   try {
     const localApps = getLocalPmbApps();
     const updated = localApps.map(app => {
@@ -992,6 +1016,11 @@ export async function updatePmbApplicationStatus(id: string, status: PmbApplicat
 
 export async function deletePmbApplication(id: string): Promise<void> {
   if (!id) return;
+  if (await isMariaDbActive()) {
+    await mariaFetch(`/pmb/${encodeURIComponent(id)}`, { method: "DELETE" });
+    return;
+  }
+
   addLocalDeletedId(COL_PMB, id);
   try {
     const localApps = getLocalPmbApps();
@@ -1013,6 +1042,14 @@ export async function deletePmbApplication(id: string): Promise<void> {
 
 // --- Contact Form Operations ---
 export async function submitContactMessage(name: string, email: string, message: string): Promise<string> {
+  if (await isMariaDbActive()) {
+    const res = await mariaFetch<{ id: string }>("/contacts", {
+      method: "POST",
+      body: JSON.stringify({ name, email, message }),
+    });
+    return res.id;
+  }
+
   const newMsg: ContactMessage = {
     name,
     email,
@@ -1040,6 +1077,10 @@ export async function submitContactMessage(name: string, email: string, message:
 }
 
 export async function getContactMessages(): Promise<ContactMessage[]> {
+  if (await isMariaDbActive()) {
+    return mariaFetch<ContactMessage[]>("/contacts");
+  }
+
   const deletedIds = getLocalDeletedIds(COL_CONTACT);
   try {
     const querySnap = await getDocs(query(collection(db, COL_CONTACT), orderBy("createdAt", "desc")));
@@ -1057,6 +1098,14 @@ export async function getContactMessages(): Promise<ContactMessage[]> {
 }
 
 export async function updateContactMessage(id: string, updates: Partial<ContactMessage>): Promise<void> {
+  if (await isMariaDbActive()) {
+    await mariaFetch(`/contacts/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    });
+    return;
+  }
+
   try {
     const localMsgs = getLocalContactMsgs();
     const updated = localMsgs.map(msg => {
@@ -1082,6 +1131,11 @@ export async function updateContactMessage(id: string, updates: Partial<ContactM
 
 export async function deleteContactMessage(id: string): Promise<void> {
   if (!id) return;
+  if (await isMariaDbActive()) {
+    await mariaFetch(`/contacts/${encodeURIComponent(id)}`, { method: "DELETE" });
+    return;
+  }
+
   addLocalDeletedId(COL_CONTACT, id);
   try {
     const localMsgs = getLocalContactMsgs();
@@ -1103,6 +1157,10 @@ export async function deleteContactMessage(id: string): Promise<void> {
 
 // --- Announcement / Highlights Operations ---
 export async function getAnnouncements(): Promise<AnnouncementItem[]> {
+  if (await isMariaDbActive()) {
+    return mariaFetch<AnnouncementItem[]>("/announcements");
+  }
+
   const deletedIds = getLocalDeletedIds(COL_ANNOUNCEMENTS);
   try {
     const querySnap = await getDocs(query(collection(db, COL_ANNOUNCEMENTS), orderBy("createdAt", "desc")));
@@ -1123,6 +1181,14 @@ export async function getAnnouncements(): Promise<AnnouncementItem[]> {
 }
 
 export async function createAnnouncement(ann: Omit<AnnouncementItem, "id">): Promise<string> {
+  if (await isMariaDbActive()) {
+    const res = await mariaFetch<{ id: string }>("/announcements", {
+      method: "POST",
+      body: JSON.stringify(ann),
+    });
+    return res.id;
+  }
+
   const tempId = "local-ann-" + Math.random().toString(36).substr(2, 9);
   try {
     const localAnns = getLocalAnnouncements();
@@ -1145,6 +1211,14 @@ export async function createAnnouncement(ann: Omit<AnnouncementItem, "id">): Pro
 }
 
 export async function updateAnnouncement(id: string, updates: Partial<AnnouncementItem>): Promise<void> {
+  if (await isMariaDbActive()) {
+    await mariaFetch(`/announcements/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    });
+    return;
+  }
+
   try {
     const localAnns = getLocalAnnouncements();
     const updated = localAnns.map(ann => {
@@ -1170,6 +1244,11 @@ export async function updateAnnouncement(id: string, updates: Partial<Announceme
 
 export async function deleteAnnouncement(id: string): Promise<void> {
   if (!id) return;
+  if (await isMariaDbActive()) {
+    await mariaFetch(`/announcements/${encodeURIComponent(id)}`, { method: "DELETE" });
+    return;
+  }
+
   addLocalDeletedId(COL_ANNOUNCEMENTS, id);
   try {
     const localAnns = getLocalAnnouncements();
@@ -1198,6 +1277,15 @@ const DEFAULT_NEWS_CATEGORIES = [
 ];
 
 export async function getNewsCategories(): Promise<string[]> {
+  if (await isMariaDbActive()) {
+    try {
+      const list = await mariaFetch<string[]>("/news-categories");
+      return list.length > 0 ? list : DEFAULT_NEWS_CATEGORIES;
+    } catch {
+      return DEFAULT_NEWS_CATEGORIES;
+    }
+  }
+
   try {
     const docRef = doc(db, COL_SETTINGS, "news_categories");
     const docSnap = await getDoc(docRef);
@@ -1226,6 +1314,14 @@ export async function getNewsCategories(): Promise<string[]> {
 }
 
 export async function saveNewsCategories(categories: string[]): Promise<void> {
+  if (await isMariaDbActive()) {
+    await mariaFetch("/news-categories", {
+      method: "PUT",
+      body: JSON.stringify({ categories }),
+    });
+    return;
+  }
+
   try {
     localStorage.setItem("local_news_categories", JSON.stringify(categories));
   } catch (e) {
@@ -1242,6 +1338,14 @@ export async function saveNewsCategories(categories: string[]): Promise<void> {
 
 // --- Website General Settings Operations ---
 export async function getWebsiteSettings(): Promise<WebsiteSettings> {
+  if (await isMariaDbActive()) {
+    try {
+      return await mariaFetch<WebsiteSettings>("/settings");
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
+  }
+
   try {
     const docRef = doc(db, COL_SETTINGS, "general");
     const docSnap = await getDoc(docRef);
@@ -1258,6 +1362,14 @@ export async function getWebsiteSettings(): Promise<WebsiteSettings> {
 }
 
 export async function saveWebsiteSettings(settings: WebsiteSettings): Promise<void> {
+  if (await isMariaDbActive()) {
+    await mariaFetch("/settings", {
+      method: "PUT",
+      body: JSON.stringify(settings),
+    });
+    return;
+  }
+
   try {
     saveLocalWebsiteSettings(settings);
   } catch (e) {
@@ -1274,6 +1386,10 @@ export async function saveWebsiteSettings(settings: WebsiteSettings): Promise<vo
 
 // --- Board Members Operations ---
 export async function getDbBoardMembers(): Promise<DbBoardMember[]> {
+  if (await isMariaDbActive()) {
+    return mariaFetch<DbBoardMember[]>("/board-members");
+  }
+
   const deletedIds = getLocalDeletedIds(COL_BOARD);
   try {
     const querySnap = await getDocs(query(collection(db, COL_BOARD), orderBy("order", "asc")));
@@ -1294,6 +1410,14 @@ export async function getDbBoardMembers(): Promise<DbBoardMember[]> {
 }
 
 export async function createDbBoardMember(member: Omit<DbBoardMember, "id">): Promise<string> {
+  if (await isMariaDbActive()) {
+    const res = await mariaFetch<{ id: string }>("/board-members", {
+      method: "POST",
+      body: JSON.stringify(member),
+    });
+    return res.id;
+  }
+
   const tempId = "local-board-" + Math.random().toString(36).substr(2, 9);
   try {
     const localMembers = getLocalBoardMembers();
@@ -1314,6 +1438,14 @@ export async function createDbBoardMember(member: Omit<DbBoardMember, "id">): Pr
 }
 
 export async function updateDbBoardMember(id: string, updates: Partial<DbBoardMember>): Promise<void> {
+  if (await isMariaDbActive()) {
+    await mariaFetch(`/board-members/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    });
+    return;
+  }
+
   try {
     const localMembers = getLocalBoardMembers();
     const updated = localMembers.map(member => {
@@ -1340,6 +1472,11 @@ export async function updateDbBoardMember(id: string, updates: Partial<DbBoardMe
 
 export async function deleteDbBoardMember(id: string): Promise<void> {
   if (!id) return;
+  if (await isMariaDbActive()) {
+    await mariaFetch(`/board-members/${encodeURIComponent(id)}`, { method: "DELETE" });
+    return;
+  }
+
   addLocalDeletedId(COL_BOARD, id);
   try {
     const localMembers = getLocalBoardMembers();
@@ -1385,6 +1522,11 @@ export function saveLocalTemplateStyles(styles: DbTemplateStyle[]) {
 }
 
 export async function getTemplateStyles(): Promise<DbTemplateStyle[]> {
+  if (await isMariaDbActive()) {
+    const list = await mariaFetch<DbTemplateStyle[]>("/template-styles");
+    return list.length > 0 ? list : DEFAULT_TEMPLATE_STYLES;
+  }
+
   try {
     const q = query(collection(db, COL_TEMPLATE_STYLES));
     const snap = await getDocs(q);
@@ -1410,6 +1552,14 @@ export async function getTemplateStyles(): Promise<DbTemplateStyle[]> {
 }
 
 export async function createDbTemplateStyle(style: Omit<DbTemplateStyle, "id">): Promise<string> {
+  if (await isMariaDbActive()) {
+    const res = await mariaFetch<{ id: string }>("/template-styles", {
+      method: "POST",
+      body: JSON.stringify(style),
+    });
+    return res.id;
+  }
+
   const tempId = "local-tpl-" + Date.now();
   try {
     const local = getLocalTemplateStyles();
@@ -1430,6 +1580,14 @@ export async function createDbTemplateStyle(style: Omit<DbTemplateStyle, "id">):
 }
 
 export async function updateDbTemplateStyle(id: string, updates: Partial<DbTemplateStyle>): Promise<void> {
+  if (await isMariaDbActive()) {
+    await mariaFetch(`/template-styles/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    });
+    return;
+  }
+
   try {
     const local = getLocalTemplateStyles();
     const updated = local.map(s => s.id === id ? { ...s, ...updates } : s);
@@ -1450,6 +1608,11 @@ export async function updateDbTemplateStyle(id: string, updates: Partial<DbTempl
 
 export async function deleteDbTemplateStyle(id: string): Promise<void> {
   if (!id) return;
+  if (await isMariaDbActive()) {
+    await mariaFetch(`/template-styles/${encodeURIComponent(id)}`, { method: "DELETE" });
+    return;
+  }
+
   addLocalDeletedId(COL_TEMPLATE_STYLES, id);
   try {
     const local = getLocalTemplateStyles();
@@ -1496,6 +1659,11 @@ export function saveLocalMenuItems(items: DbMenuItem[]) {
 }
 
 export async function getMenuItems(): Promise<DbMenuItem[]> {
+  if (await isMariaDbActive()) {
+    const list = await mariaFetch<DbMenuItem[]>("/menu-items");
+    return list.length > 0 ? list.sort((a, b) => a.order - b.order) : DEFAULT_MENU_ITEMS;
+  }
+
   try {
     const q = query(collection(db, COL_MENU_ITEMS));
     const snap = await getDocs(q);
@@ -1520,6 +1688,14 @@ export async function getMenuItems(): Promise<DbMenuItem[]> {
 }
 
 export async function createDbMenuItem(item: Omit<DbMenuItem, "id">): Promise<string> {
+  if (await isMariaDbActive()) {
+    const res = await mariaFetch<{ id: string }>("/menu-items", {
+      method: "POST",
+      body: JSON.stringify(item),
+    });
+    return res.id;
+  }
+
   const tempId = "local-menu-" + Date.now();
   try {
     const local = getLocalMenuItems();
@@ -1541,6 +1717,14 @@ export async function createDbMenuItem(item: Omit<DbMenuItem, "id">): Promise<st
 }
 
 export async function updateDbMenuItem(id: string, updates: Partial<DbMenuItem>): Promise<void> {
+  if (await isMariaDbActive()) {
+    await mariaFetch(`/menu-items/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    });
+    return;
+  }
+
   try {
     const local = getLocalMenuItems();
     const updated = local.map(m => m.id === id ? { ...m, ...updates } : m);
@@ -1562,6 +1746,11 @@ export async function updateDbMenuItem(id: string, updates: Partial<DbMenuItem>)
 
 export async function deleteDbMenuItem(id: string): Promise<void> {
   if (!id) return;
+  if (await isMariaDbActive()) {
+    await mariaFetch(`/menu-items/${encodeURIComponent(id)}`, { method: "DELETE" });
+    return;
+  }
+
   addLocalDeletedId(COL_MENU_ITEMS, id);
   try {
     const local = getLocalMenuItems();

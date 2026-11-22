@@ -7,6 +7,14 @@ import {
   onAuthStateChanged,
   FirebaseUser
 } from "../lib/firebase";
+import {
+  isMariaDbActive,
+  getMariaAdminStatus,
+  setupMariaAdmin,
+  loginMariaAdmin,
+  clearMariaAdminToken,
+  getMariaAdminToken
+} from "../lib/mariaClient";
 import { 
   getPmbApplications, 
   getContactMessages, 
@@ -242,6 +250,8 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [mariaMode, setMariaMode] = useState(false);
+  const [mariaAdminInitialized, setMariaAdminInitialized] = useState(true);
   
   // Dashboard state loaded from Firestore
   const [pmbApplicants, setPmbApplicants] = useState<PmbApplication[]>([]);
@@ -723,12 +733,42 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
   }, [activeTab]);
 
   useEffect(() => {
-    // Monitor Auth State
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setLoading(false);
-    });
-    return unsubscribe;
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+
+    async function initAuth() {
+      const usingMaria = await isMariaDbActive();
+      if (!active) return;
+
+      if (usingMaria) {
+        setMariaMode(true);
+        try {
+          const status = await getMariaAdminStatus();
+          if (active) setMariaAdminInitialized(status.initialized);
+        } catch {
+          if (active) setMariaAdminInitialized(true);
+        }
+        if (getMariaAdminToken()) {
+          setUser({ email: "admin@apj.ac.id", uid: "mariadb-admin" });
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Monitor Firebase Auth State
+      unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        if (active) {
+          setUser(firebaseUser);
+          setLoading(false);
+        }
+      });
+    }
+
+    initAuth();
+    return () => {
+      active = false;
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   // Fetch metrics data upon connection
@@ -819,6 +859,22 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
+
+    if (mariaMode) {
+      try {
+        if (!mariaAdminInitialized) {
+          await setupMariaAdmin(email, password);
+          setMariaAdminInitialized(true);
+        } else {
+          await loginMariaAdmin(email, password);
+        }
+        setUser({ email: email.trim().toLowerCase(), uid: "mariadb-admin" });
+      } catch (err: any) {
+        setLoginError(err?.message || "Autentikasi admin MariaDB gagal.");
+      }
+      return;
+    }
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err: any) {
@@ -855,6 +911,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
   };
 
   const handleLogout = async () => {
+    clearMariaAdminToken();
     try {
       await signOut(auth);
     } catch (err) {
@@ -1610,8 +1667,14 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
             <div className="mx-auto w-12 h-12 bg-white/10 rounded-full flex items-center justify-center border border-[#FFDCA0]/30">
               <Lock size={22} className="text-[#FFDCA0]" />
             </div>
-            <h2 className="text-lg font-black tracking-wide font-heading">Login Administrator APJ</h2>
-            <p className="text-[10px] text-neutral-300 font-semibold">Gunakan sandi resmi untuk mengautentikasi kelola website.</p>
+            <h2 className="text-lg font-black tracking-wide font-heading">
+              {mariaMode && !mariaAdminInitialized ? "Setup Admin MariaDB Lokal" : "Login Administrator APJ"}
+            </h2>
+            <p className="text-[10px] text-neutral-300 font-semibold">
+              {mariaMode && !mariaAdminInitialized
+                ? "Buat akun administrator pertama (minimal 8 karakter password) untuk database lokal."
+                : "Gunakan sandi resmi untuk mengautentikasi kelola website."}
+            </p>
           </div>
           
           <form onSubmit={handleLogin} className="p-6 space-y-4">
@@ -1647,6 +1710,7 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
                 <input 
                   type="password" 
                   required
+                  minLength={mariaMode && !mariaAdminInitialized ? 8 : undefined}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -1659,26 +1723,30 @@ export default function AdminView({ onRefreshMenus }: { onRefreshMenus?: () => v
               type="submit"
               className="w-full bg-primary hover:bg-[#002B5C] text-white text-xs font-bold py-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 border-b-2 border-[#ffca7c]/10"
             >
-              Sign In ke Konsol
+              {mariaMode && !mariaAdminInitialized ? "Simpan & Masuk sebagai Admin" : "Sign In ke Konsol"}
             </button>
 
-            <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-neutral-200"></div>
-              <span className="flex-shrink mx-4 text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Atau Evaluasi/Grading Fast Pass</span>
-              <div className="flex-grow border-t border-neutral-200"></div>
-            </div>
+            {!mariaMode && (
+              <>
+                <div className="relative flex py-2 items-center">
+                  <div className="flex-grow border-t border-neutral-200"></div>
+                  <span className="flex-shrink mx-4 text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Atau Evaluasi/Grading Fast Pass</span>
+                  <div className="flex-grow border-t border-neutral-200"></div>
+                </div>
 
-            <button
-              type="button"
-              onClick={handleQuickBypass}
-              className="w-full bg-amber-500 hover:bg-amber-600 border border-amber-600/30 text-white text-xs font-bold py-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
-            >
-              <User size={14} />
-              Quick Administrator Bypass (Simulasi)
-            </button>
-            <p className="text-[9px] text-zinc-500 leading-normal text-center bg-zinc-50 p-2.5 rounded border border-dashed">
-              *Catatan Pengembang: Klik bypass atau buat user admin di Firebase Console (Email: admin@apj.ac.id, Password: admin123) untuk tes database sungguhan.
-            </p>
+                <button
+                  type="button"
+                  onClick={handleQuickBypass}
+                  className="w-full bg-amber-500 hover:bg-amber-600 border border-amber-600/30 text-white text-xs font-bold py-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
+                >
+                  <User size={14} />
+                  Quick Administrator Bypass (Simulasi)
+                </button>
+                <p className="text-[9px] text-zinc-500 leading-normal text-center bg-zinc-50 p-2.5 rounded border border-dashed">
+                  *Catatan Pengembang: Klik bypass atau buat user admin di Firebase Console (Email: admin@apj.ac.id, Password: admin123) untuk tes database sungguhan.
+                </p>
+              </>
+            )}
           </form>
         </div>
       ) : (

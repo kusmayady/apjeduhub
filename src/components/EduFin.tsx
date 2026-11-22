@@ -10,6 +10,7 @@ import {
   setDoc,
   serverTimestamp 
 } from "../lib/firebase";
+import { isMariaDbActive, mariaFetch } from "../lib/mariaClient";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -129,6 +130,16 @@ export function EduFin({ pmbApplicants }: EduFinProps) {
     async function loadEduFinData() {
       setLoading(true);
       try {
+        if (await isMariaDbActive()) {
+          const [expList, sppList] = await Promise.all([
+            mariaFetch<CampusExpense[]>("/edufin/expenses"),
+            mariaFetch<StudentPayment[]>("/edufin/spp"),
+          ]);
+          setExpenses(expList);
+          setStudentPayments(sppList);
+          return;
+        }
+
         // 1. Load Expenses
         const expSnapshot = await getDocs(collection(db, "edufin_expenses"));
         let expList: CampusExpense[] = [];
@@ -160,7 +171,7 @@ export function EduFin({ pmbApplicants }: EduFinProps) {
         setExpenses(expList);
         setStudentPayments(sppList);
       } catch (err) {
-        console.error("Gagal memuat data keuangan dari Firestore:", err);
+        console.error("Gagal memuat data keuangan:", err);
         // Fallback to local state if offline/permission issue
         setExpenses(defaultExpenseData);
         setStudentPayments(defaultSppData);
@@ -234,8 +245,18 @@ export function EduFin({ pmbApplicants }: EduFinProps) {
     };
 
     try {
-      const docRef = await addDoc(collection(db, "edufin_spp"), newSpp);
-      setStudentPayments(prev => [...prev, { id: docRef.id, ...newSpp }]);
+      let createdId = "";
+      if (await isMariaDbActive()) {
+        const res = await mariaFetch<{ id: string }>("/edufin/spp", {
+          method: "POST",
+          body: JSON.stringify(newSpp),
+        });
+        createdId = res.id;
+      } else {
+        const docRef = await addDoc(collection(db, "edufin_spp"), newSpp);
+        createdId = docRef.id;
+      }
+      setStudentPayments(prev => [...prev, { id: createdId, ...newSpp }]);
       setShowAddSppModal(false);
       // Reset
       setSppName("");
@@ -244,7 +265,7 @@ export function EduFin({ pmbApplicants }: EduFinProps) {
       setSppStatus("Menunggu");
     } catch (err) {
       console.error("Gagal menyimpan SPP:", err);
-      alert("Error menyimpan data SPP ke awan.");
+      alert("Error menyimpan data SPP.");
     }
   };
 
@@ -267,8 +288,18 @@ export function EduFin({ pmbApplicants }: EduFinProps) {
     };
 
     try {
-      const docRef = await addDoc(collection(db, "edufin_spp"), newSpp);
-      setStudentPayments(prev => [...prev, { id: docRef.id, ...newSpp }]);
+      let createdId = "";
+      if (await isMariaDbActive()) {
+        const res = await mariaFetch<{ id: string }>("/edufin/spp", {
+          method: "POST",
+          body: JSON.stringify(newSpp),
+        });
+        createdId = res.id;
+      } else {
+        const docRef = await addDoc(collection(db, "edufin_spp"), newSpp);
+        createdId = docRef.id;
+      }
+      setStudentPayments(prev => [...prev, { id: createdId, ...newSpp }]);
       alert(`Berhasil mengimpor pendaftar ${applicant.name} sebagai calon mahasiswa terdaftar dengan NIM sementara: ${generatedNim}`);
     } catch (err) {
       console.error(err);
@@ -278,12 +309,19 @@ export function EduFin({ pmbApplicants }: EduFinProps) {
 
   const handleUpdateSppStatus = async (id: string, newStatus: "Lunas" | "Menunggu" | "Tunggakan") => {
     try {
-      const docRef = doc(db, "edufin_spp", id);
       const today = newStatus === "Lunas" ? new Date().toISOString().split("T")[0] : "";
-      await updateDoc(docRef, { 
-        status: newStatus,
-        lastPaid: today
-      });
+      if (await isMariaDbActive()) {
+        await mariaFetch(`/edufin/spp/${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: newStatus, lastPaid: today }),
+        });
+      } else {
+        const docRef = doc(db, "edufin_spp", id);
+        await updateDoc(docRef, { 
+          status: newStatus,
+          lastPaid: today
+        });
+      }
       setStudentPayments(prev => prev.map(s => s.id === id ? { ...s, status: newStatus, lastPaid: today } : s));
     } catch (err) {
       console.error("Gagal update status SPP:", err);
@@ -293,7 +331,11 @@ export function EduFin({ pmbApplicants }: EduFinProps) {
   const handleDeleteSpp = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus catatan tagihan mahasiswa ini?")) return;
     try {
-      await deleteDoc(doc(db, "edufin_spp", id));
+      if (await isMariaDbActive()) {
+        await mariaFetch(`/edufin/spp/${encodeURIComponent(id)}`, { method: "DELETE" });
+      } else {
+        await deleteDoc(doc(db, "edufin_spp", id));
+      }
       setStudentPayments(prev => prev.filter(s => s.id !== id));
     } catch (err) {
       console.error(err);
@@ -316,8 +358,18 @@ export function EduFin({ pmbApplicants }: EduFinProps) {
     };
 
     try {
-      const docRef = await addDoc(collection(db, "edufin_expenses"), newExp);
-      setExpenses(prev => [...prev, { id: docRef.id, ...newExp }]);
+      let createdId = "";
+      if (await isMariaDbActive()) {
+        const res = await mariaFetch<{ id: string }>("/edufin/expenses", {
+          method: "POST",
+          body: JSON.stringify(newExp),
+        });
+        createdId = res.id;
+      } else {
+        const docRef = await addDoc(collection(db, "edufin_expenses"), newExp);
+        createdId = docRef.id;
+      }
+      setExpenses(prev => [...prev, { id: createdId, ...newExp }]);
       setShowAddExpenseModal(false);
       setExpAmount("");
       setExpDesc("");
@@ -330,7 +382,11 @@ export function EduFin({ pmbApplicants }: EduFinProps) {
   const handleDeleteExpense = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus catatan pengeluaran ini?")) return;
     try {
-      await deleteDoc(doc(db, "edufin_expenses", id));
+      if (await isMariaDbActive()) {
+        await mariaFetch(`/edufin/expenses/${encodeURIComponent(id)}`, { method: "DELETE" });
+      } else {
+        await deleteDoc(doc(db, "edufin_expenses", id));
+      }
       setExpenses(prev => prev.filter(e => e.id !== id));
     } catch (err) {
       console.error(err);

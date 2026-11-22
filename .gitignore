@@ -1,0 +1,26 @@
+# Dependencies & Build Output
+node_modules/
+dist/
+server.js
+
+# Environment & Local Secrets (WAJIB di-ignore agar password MariaDB & API key tidak masuk GitHub)
+.env
+.env.local
+.env.*.local
+
+# Local Database Dumps / Backups (simpan dump pribadi di folder ini agar tidak ter-commit)
+database/backups/
+*.sqlite
+*.db
+
+# macOS & Editor Metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+*.log

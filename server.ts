@@ -3,13 +3,15 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import dbRoutes from "./src/routes/dbRoutes.ts";
 
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
 
-app.use(express.json());
+app.use(express.json({ limit: "4mb" }));
+app.use("/api/db", dbRoutes);
 
 // Initialize Gemini Client
 const apiKey = process.env.GEMINI_API_KEY;
@@ -48,7 +50,7 @@ app.post("/api/chat", async (req, res) => {
       "Jawablah seluruh pertanyaan dalam bahasa Indonesia yang ramah, sopan, tulus, dan komunikatif.";
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-3.8-flash",
       contents: message,
       config: {
         systemInstruction: systemInstruction,
@@ -138,7 +140,7 @@ app.post("/api/generate-article", async (req, res) => {
       `Artikel ini harus menggambarkan wawasan luas seputar hospitality, pariwisata, kuliner, karir global, atau keunggulan akademik kampus APJ Jakarta. Pastikan di bagian paling bawah isi artikel mencantumkan hashtag yang relevan, dan JANGAN tampilkan teks ringkasan rincian 5W+1H apa pun dalam bentuk daftar/bullet.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-3.8-flash",
       contents: prompt,
       config: {
         systemInstruction: systemInstruction,
@@ -212,7 +214,7 @@ app.post("/api/edufin-advisor", async (req, res) => {
       `Berikan analisis mendalam dan solusi keuangan terbaik bagi kampus kami agar kegiatan akademik tetap berstandar bintang 5 namun tetap menguntungkan secara bisnis.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-3.8-flash",
       contents: prompt,
       config: {
         systemInstruction: systemInstruction,
